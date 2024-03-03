@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Feb 23 10:55:28 2023
-
-@author: alessandro
-"""
 
 import json
 import paho.mqtt.client as PahoMQTT
