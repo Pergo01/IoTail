@@ -1,0 +1,414 @@
+{
+  "Breeds": [
+    {
+      "breedID" : 1,
+      "breed": "Labrador Retriever",
+      "size": {
+        "min": 55,
+        "max": 62
+      },
+      "heartRateRange": {
+        "min": 60,
+        "max": 100
+      },
+      "weightRange": {
+        "min": 25,
+        "max": 36
+      },
+      "dailyActivityTime": {
+        "min": 3600,
+        "max": 7200
+      },
+      "environmentTemperatureRange": {
+        "min": -10,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 30,
+        "max": 70
+      }
+    },
+    {
+      "breedID" : 2,
+      "breed": "Poodle",
+      "size": {
+        "min": 25,
+        "max": 38
+      },
+      "heartRateRange": {
+        "min": 60,
+        "max": 100
+      },
+      "weightRange": {
+        "min": 20,
+        "max": 32
+      },
+      "dailyActivityTime": {
+        "min": 1800,
+        "max": 5400
+      },
+      "environmentTemperatureRange": {
+        "min": 16,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 20,
+        "max": 80
+      }
+    },
+    {
+      "breedID" : 3,
+      "breed": "Chihuahua",
+      "size": {
+        "min": 15,
+        "max": 23
+      },
+      "heartRateRange": {
+        "min": 100,
+        "max": 140
+      },
+      "weightRange": {
+        "min": 1.5,
+        "max": 3
+      },
+      "dailyActivityTime": {
+        "min": 1800,
+        "max": 3600
+      },
+      "environmentTemperatureRange": {
+        "min": 16,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 30,
+        "max": 60
+      }
+    },
+    {
+      "breedID" : 4,
+      "breed": "German Shepherd",
+      "size": {
+        "min": 55,
+        "max": 65
+      },
+      "heartRateRange": {
+        "min": 50,
+        "max": 90
+      },
+      "weightRange": {
+        "min": 25,
+        "max": 41
+      },
+      "dailyActivityTime": {
+        "min": 5400,
+        "max": 9000
+      },
+      "environmentTemperatureRange": {
+        "min": -10,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 30,
+        "max": 70
+      }
+    },
+    {
+      "breedID" : 5,
+      "breed": "Bulldog",
+      "size": {
+        "min": 28,
+        "max": 38
+      },
+      "heartRateRange": {
+        "min": 60,
+        "max": 100
+      },
+      "weightRange": {
+        "min": 18,
+        "max": 25
+      },
+        "environmentHumidityRange": {
+        "min": 20,
+        "max": 80
+      }
+    },
+    {
+      "breedID" : 6,
+      "breed": "Boxer",
+      "size": {
+        "min": 53,
+        "max": 63
+      },
+      "heartRateRange": {
+        "min": 60,
+        "max": 120
+      },
+      "weightRange": {
+        "min": 25,
+        "max": 32
+      },
+      "dailyActivityTime": {
+        "min": 3600,
+        "max": 7200
+      },
+      "environmentTemperatureRange": {
+        "min": 16,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 30,
+        "max": 60
+      }
+    },
+    {
+      "breedID" : 7,
+      "breed": "Rottweiler",
+      "size": {
+        "min": 55,
+        "max": 69
+      },
+      "heartRateRange": {
+        "min": 60,
+        "max": 100
+      },
+      "weightRange": {
+        "min": 35,
+        "max": 60
+      },
+      "dailyActivityTime": {
+        "min": 3600,
+        "max": 7200
+      },
+      "environmentTemperatureRange": {
+        "min": -10,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 30,
+        "max": 70
+      }
+    },
+    {
+      "breedID" : 8,
+      "breed": "Dalmatian",
+      "size": {
+        "min": 56,
+        "max": 62
+      },
+      "heartRateRange": {
+        "min": 60,
+        "max": 100
+      },
+      "weightRange": {
+        "min": 23,
+        "max": 27
+      },
+      "dailyActivityTime": {
+        "min": 3600,
+        "max": 7200
+      },
+      "environmentTemperatureRange": {
+        "min": 16,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 30,
+        "max": 70
+      }
+    },
+    {
+      "breedID" : 9,
+      "breed": "Shih Tzu",
+      "size": {
+        "min": 20,
+        "max": 28
+      },
+      "heartRateRange": {
+        "min": 70,
+        "max": 110
+      },
+      "weightRange": {
+        "min": 4.5,
+        "max": 8.1
+      },
+      "dailyActivityTime": {
+        "min": 1800,
+        "max": 3600
+      },
+      "environmentTemperatureRange": {
+        "min": 16,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 20,
+        "max": 70
+      }
+    },
+    {
+      "breedID" : 10,
+      "breed": "Greyhound",
+      "size": {
+        "min": 68,
+        "max": 76
+      },
+      "heartRateRange": {
+        "min": 60,
+        "max": 90
+      },
+      "weightRange": {
+        "min": 27,
+        "max": 40
+      },
+      "dailyActivityTime": {
+        "min": 5400,
+        "max": 9000
+      },
+      "environmentTemperatureRange": {
+        "min": -10,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 30,
+        "max": 70
+      }
+    },
+    {
+      "breedID" : 11,
+      "breed": "Beagle",
+      "size": {
+        "min": 33,
+        "max": 41
+      },
+      "heartRateRange": {
+        "min": 70,
+        "max": 110
+      },
+      "weightRange": {
+        "min": 9,
+        "max": 16
+      },
+      "dailyActivityTime": {
+        "min": 3600,
+        "max": 7200
+      },
+      "environmentTemperatureRange": {
+        "min": 16,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 40,
+        "max": 70
+      }
+    },
+    {
+      "breedID" : 12,
+      "breed": "Chihuahua",
+      "size": {
+        "min": 15,
+        "max": 23
+      },
+      "heartRateRange": {
+        "min": 90,
+        "max": 140
+      },
+      "weightRange": {
+        "min": 1,
+        "max": 3
+      },
+      "dailyActivityTime": {
+        "min": 1200,
+        "max": 3600
+      },
+      "environmentTemperatureRange": {
+        "min": 16,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 30,
+        "max": 70
+      }
+    },
+    {
+      "breedID" : 13,
+      "breed": "Siberian Husky",
+      "size": {
+        "min": 51,
+        "max": 60
+      },
+      "heartRateRange": {
+        "min": 70,
+        "max": 110
+      },
+      "weightRange": {
+        "min": 16,
+        "max": 27
+      },
+      "dailyActivityTime": {
+        "min": 5400,
+        "max": 9000
+      },
+      "environmentTemperatureRange": {
+        "min": -50,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 20,
+        "max": 60
+      }
+    },
+    {
+      "breedID" : 14,
+      "breed": "Poodle",
+      "size": {
+        "min": 24,
+        "max": 43
+      },
+      "heartRateRange": {
+        "min": 60,
+        "max": 100
+      },
+      "weightRange": {
+        "min": 4,
+        "max": 32
+      },
+      "dailyActivityTime": {
+        "min": 3600,
+        "max": 7200
+      },
+      "environmentTemperatureRange": {
+        "min": 16,
+        "max": 26
+      },
+      "environmentHumidityRange": {
+        "min": 20,
+        "max": 80
+      }
+    }
+  ],
+  "Devices": [
+    {
+      "DeviceID": 1,
+      "Name": "Temperature Sensor",
+      "Available": true,
+      "MeasureType": "Temperature",
+      "MeasureUnit": "C",
+      "CommunicationParadigm": [
+        "Rest",
+        "MQTT"
+      ]
+    }
+  ],
+  "Dogs": [
+    {
+      "DogID": 1,
+      "Name": "Fuffi",
+      "Breed": "German Shepherd",
+      "Age": 5,
+      "Sex": 0,
+      "Weight": 40.0,
+      "Escape": false,
+      "DailyActivity": 0,
+      "LastAntiTickApplication": "15/05/2022"
+    }
+  ]
+}
