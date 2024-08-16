@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from Libraries.publisher_subscriber import *
+from Libraries import Publisher
 import time
 
 
@@ -11,7 +11,7 @@ class test:
         self.clientID = clientID
         self.broker = broker
         self.port = port
-        self.client = PublisherSubscriber(clientID, broker, port, self)
+        self.client = Publisher(clientID, broker, port, self)
 
     def start(self):
         self.client.start()
@@ -28,12 +28,10 @@ settings = json.load(open("settings.json"))
 publisher = test("Publisher", settings["broker"], settings["port"])
 message = {"message": "Test message for IoTail project"}
 publisher.start()
-c = 0
-while c < 5:
-    time.sleep(1)
-    c += 1
-publisher.publish("IoT_sample", message, 2)
-while c < 10:
-    time.sleep(1)
-    c += 1
+while True:
+    try:
+        time.sleep(1)
+        publisher.publish(settings["baseTopic"], message, 2)
+    except KeyboardInterrupt:
+        break
 publisher.stop()

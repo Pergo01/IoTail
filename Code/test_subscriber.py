@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from Libraries.publisher_subscriber import *
+from Libraries import Subscriber
 import time
 
 
@@ -11,7 +11,7 @@ class test:
         self.clientID = clientID
         self.broker = broker
         self.port = port
-        self.client = PublisherSubscriber(clientID, broker, port, self)
+        self.client = Subscriber(clientID, broker, port, self)
 
     def start(self):
         self.client.start()
@@ -19,7 +19,7 @@ class test:
 
     def notify(self, topic, msg):
         message = json.loads(msg)
-        print(message["message"])
+        print(message)
 
     def subscribe(self, topic, QoS):
         self.client.subscribe(topic, QoS)
@@ -29,11 +29,12 @@ class test:
 
 
 settings = json.load(open("settings.json"))
-publisher = test("Subscriber", settings["broker"], settings["port"])
-publisher.start()
-publisher.subscribe("IoT_sample", 0)
-c = 0
-while c < 10:
-    time.sleep(1)
-    c += 1
-publisher.stop()
+subscriber = test("Subscriber", settings["broker"], settings["port"])
+subscriber.start()
+subscriber.subscribe(settings["baseTopic"], 0)
+while True:
+    try:
+        time.sleep(1)
+    except KeyboardInterrupt:
+        break
+subscriber.stop()
