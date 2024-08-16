@@ -31,9 +31,9 @@ if __name__ == "__main__":
     while True:
         try:
             motion_sensor.motion_sensor.wait_for_motion()
-            motion_sensor.publish("IoTail", {"movement": True}, 2)
+            motion_sensor.publish(settings["baseTopic"], {"movement": True}, 2)
             motion_sensor.motion_sensor.wait_for_no_motion()
-            motion_sensor.publish("IoTail", {"movement": False}, 2)
+            motion_sensor.publish(settings["baseTopic"], {"movement": False}, 2)
         except KeyboardInterrupt:
             break
     motion_sensor.stop()
