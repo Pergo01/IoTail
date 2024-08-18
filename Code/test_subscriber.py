@@ -28,7 +28,7 @@ class test:
         self.client.stop()
 
 
-settings = json.load(open("settings.json"))
+settings = json.load(open("mqtt_settings.json"))
 subscriber = test("Subscriber", settings["broker"], settings["port"])
 subscriber.start()
 subscriber.subscribe(settings["baseTopic"], 0)

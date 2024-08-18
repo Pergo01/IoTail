@@ -1,0 +1,128 @@
+version: '3'
+services:
+  catalog:
+    build: ./catalog
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./catalog:/app
+      - ./settings.json:/app/settings.json
+    depends_on:
+      - mosquitto
+    restart: always
+    networks:
+      - iotail_network
+
+  device_connector:
+    build: ./device_connector
+    environment:
+      - MQTT_HOST=mosquitto
+    volumes:
+      - ./device_connector:/app
+      - ./settings.json:/app/settings.json
+    depends_on:
+      - catalog
+      - mosquitto
+    restart: always
+    networks:
+      - iotail_network
+
+  camera:
+    build: ./camera
+    volumes:
+      - ./camera:/app
+      - ./settings.json:/app/settings.json
+    #devices:
+    #  - "/dev/video0:/dev/video0"
+    depends_on:
+      - catalog
+      - mosquitto
+    restart: always
+    networks:
+      - iotail_network
+
+  data_analysis:
+    build: ./data_analysis
+    volumes:
+      - ./data_analysis:/app
+      - ./settings.json:/app/settings.json
+    depends_on:
+      - catalog
+      - mosquitto
+    restart: always
+    networks:
+      - iotail_network
+
+  reservation_manager:
+    build: ./reservation_manager
+    volumes:
+      - ./reservation_manager:/app
+      - ./settings.json:/app/settings.json
+    depends_on:
+      - catalog
+      - mosquitto
+    restart: always
+    networks:
+      - iotail_network
+
+  thingspeak_adaptor:
+    build: ./thingspeak_adaptor
+    volumes:
+      - ./thingspeak_adaptor:/app
+      - ./settings.json:/app/settings.json
+    depends_on:
+      - catalog
+      - mosquitto
+    restart: always
+    networks:
+      - iotail_network
+
+  disinfection_system:
+    build: ./disinfection_system
+    volumes:
+      - ./disinfection_system:/app
+      - ./settings.json:/app/settings.json
+    depends_on:
+      - catalog
+      - mosquitto
+    restart: always
+    networks:
+      - iotail_network
+
+  mobile_app_simulator:
+    build: ./mobile_app_simulator
+    volumes:
+      - ./mobile_app_simulator:/app
+      - ./settings.json:/app/settings.json
+    depends_on:
+      - catalog
+      - mosquitto
+    restart: always
+    networks:
+      - iotail_network
+
+  node-red:
+    image: nodered/node-red:latest
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./node-red-data:/data
+    restart: always
+    networks:
+      - iotail_network
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    networks:
+      - iotail_network
+
+networks:
+  iotail_network:
+    driver: bridge

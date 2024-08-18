@@ -24,7 +24,7 @@ class test:
         self.client.stop()
 
 
-settings = json.load(open("settings.json"))
+settings = json.load(open("mqtt_settings.json"))
 publisher = test("Publisher", settings["broker"], settings["port"])
 message = {"message": "Test message for IoTail project"}
 publisher.start()

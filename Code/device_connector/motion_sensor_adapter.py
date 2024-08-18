@@ -24,7 +24,7 @@ class PIRSensor:
 
 
 if __name__ == "__main__":
-    settings = json.load(open("settings.json"))
+    settings = json.load(open("../mqtt_settings.json"))
     motion_sensor = PIRSensor("MotionSensor", settings["broker"], settings["port"])
     motion_sensor.start()
 

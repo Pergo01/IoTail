@@ -4,6 +4,7 @@ import json
 import board
 import adafruit_dht
 
+
 class TempHumidSensor:
 
     def __init__(self, clientID, broker, port):
@@ -24,15 +25,19 @@ class TempHumidSensor:
 
 
 if __name__ == "__main__":
-    settings = json.load(open("settings.json"))
-    temp_humid_sensor = TempHumidSensor("TempHumidSensor", settings["broker"], settings["port"])
+    settings = json.load(open("../mqtt_settings.json"))
+    temp_humid_sensor = TempHumidSensor(
+        "TempHumidSensor", settings["broker"], settings["port"]
+    )
     temp_humid_sensor.start()
 
     while True:
         try:
             temp = temp_humid_sensor.temp_humid_sensor.temperature
             humid = temp_humid_sensor.temp_humid_sensor.humidity
-            temp_humid_sensor.publish(settings["baseTopic"], {"temperature": temp, "humidity": humid}, 2)
+            temp_humid_sensor.publish(
+                settings["baseTopic"], {"temperature": temp, "humidity": humid}, 2
+            )
             time.sleep(1)
         except RuntimeError as error:
             # Errors happen fairly often, DHT's are hard to read, just keep going

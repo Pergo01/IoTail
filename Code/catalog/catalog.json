@@ -1,0 +1,21 @@
+{
+    "broker": {
+        "ip": "mqtt.eclipse.org",
+        "port": 1883
+    },
+    "deviceList": [],
+    "serviceList": [],
+    "dogBreeds": [
+        {
+            "breed": "Labrador",
+            "temperatureRange": {
+                "min": 18,
+                "max": 26
+            },
+            "humidityRange": {
+                "min": 30,
+                "max": 70
+            }
+        }
+    ]
+}

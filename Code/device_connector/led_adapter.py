@@ -3,6 +3,7 @@ from Libraries import Subscriber
 import time
 import json
 
+
 class Led:
     def __init__(self, pin, clientID, broker, port):
         self.led = LED(pin)
@@ -28,9 +29,10 @@ class Led:
     def stop(self):
         self.client.stop()
 
+
 if __name__ == "__main__":
-    settings = json.load(open("settings.json"))
-    led = Led(21,"Subscriber", settings["broker"], settings["port"])
+    settings = json.load(open("../mqtt_settings.json"))
+    led = Led(21, "Subscriber", settings["broker"], settings["port"])
     led.start()
     led.subscribe(settings["baseTopic"], 0)
     while True:
