@@ -1,3 +1,4 @@
 .DS_STORE
 Code/Libraries/__pycache__/*
 Code/node-red-data/*
+Code/settings.json
