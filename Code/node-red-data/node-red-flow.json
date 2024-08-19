@@ -1,0 +1,72 @@
+[
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "mqtt in",
+        "z": "3b7cb1d7.7293de",
+        "name": "IoTail Sensors",
+        "topic": "IoTail/+/sensors",
+        "qos": "2",
+        "datatype": "json",
+        "broker": "8a7f3876.179b48",
+        "x": 130,
+        "y": 80,
+        "wires": [
+            [
+                "17832d7b.841fdb"
+            ]
+        ]
+    },
+    {
+        "id": "17832d7b.841fdb",
+        "type": "function",
+        "z": "3b7cb1d7.7293de",
+        "name": "Process Data",
+        "func": "msg.payload = {\n    temperature: msg.payload.temperature,\n    humidity: msg.payload.humidity,\n    motion: msg.payload.motion\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 340,
+        "y": 80,
+        "wires": [
+            [
+                "7e9fb3c9.faa91c"
+            ]
+        ]
+    },
+    {
+        "id": "7e9fb3c9.faa91c",
+        "type": "ui_chart",
+        "z": "3b7cb1d7.7293de",
+        "name": "IoTail Dashboard",
+        "group": "4e8063d4.62c43c",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "Kennel Data",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "x": 560,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    }
+]
