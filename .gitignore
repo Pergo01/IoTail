@@ -2,5 +2,6 @@
 Code/Libraries/__pycache__/*
 Code/node-red-data/*
 Code/settings.json
+Code/device_connector/__pycache__/*
 
 !Code/node-red-data/node-red-flow.json
