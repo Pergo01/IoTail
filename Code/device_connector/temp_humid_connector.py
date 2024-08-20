@@ -4,9 +4,11 @@ import json
 import board
 import adafruit_dht
 import datetime
+import cherrypy
 
 
 class TempHumidSensor:
+    exposed = True
 
     def __init__(self, clientID, broker, port):
         self.temp_humid_sensor = adafruit_dht.DHT11(board.D15, use_pulseio=False)
@@ -24,6 +26,29 @@ class TempHumidSensor:
     def stop(self):
         self.client.stop()
 
+    def GET(self):
+        temp = self.temp_humid_sensor.temperature
+        humid = self.temp_humid_sensor.humidity
+        return json.dumps(
+            {
+                "bn": "TempHumidSensor",
+                "e": [
+                    {
+                        "n": "temperature",
+                        "u": "Cel",
+                        "t": datetime.datetime.now().timestamp(),
+                        "v": temp,
+                    },
+                    {
+                        "n": "humidity",
+                        "u": "%",
+                        "t": datetime.datetime.now().timestamp(),
+                        "v": humid,
+                    },
+                ],
+            }
+        )
+
 
 if __name__ == "__main__":
     settings = json.load(open("mqtt_settings.json"))
@@ -31,6 +56,16 @@ if __name__ == "__main__":
         "TempHumidSensor", settings["broker"], settings["port"]
     )
     temp_humid_sensor.start()
+    conf = {
+        "/": {
+            "request.dispatch": cherrypy.dispatch.MethodDispatcher(),
+            "tools.sessions.on": True,
+        }
+    }
+    cherrypy.tree.mount(temp_humid_sensor, "/", conf)
+    cherrypy.config.update({"server.socket_host": "172.20.10.2"})
+    cherrypy.config.update({"server.socket_port": 8080})
+    cherrypy.engine.start()
 
     while True:
         try:
@@ -68,6 +103,5 @@ if __name__ == "__main__":
             raise error
         except KeyboardInterrupt:
             break
+    cherrypy.engine.block()
     temp_humid_sensor.stop()
-
-
