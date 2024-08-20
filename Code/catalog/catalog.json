@@ -1,21 +1,225 @@
 {
     "broker": {
-        "ip": "mqtt.eclipse.org",
+        "ip": "mqtt.eclipseprojects.io",
         "port": 1883
     },
-    "deviceList": [],
-    "serviceList": [],
-    "dogBreeds": [
-        {
-            "breed": "Labrador",
-            "temperatureRange": {
-                "min": 18,
-                "max": 26
-            },
-            "humidityRange": {
-                "min": 30,
-                "max": 70
-            }
-        }
-    ]
+    "Breeds": [
+    {
+      "BreedID": 1,
+      "Name": "German Shepherd",
+      "MaxIdealTemperature": 24,
+      "MinIdealTemperature": 16,
+      "MaxIdealHumidity": 75,
+      "MinIdealHumidity": 25,
+      "AvgSize": 60,
+      "AvgWeight": 30,
+      "CoatType": "Medium"
+    },
+    {
+      "BreedID": 2,
+      "Name": "Labrador Retriever",
+      "MaxIdealTemperature": 22,
+      "MinIdealTemperature": 14,
+      "MaxIdealHumidity": 70,
+      "MinIdealHumidity": 30,
+      "AvgSize": 57,
+      "AvgWeight": 32,
+      "CoatType": "Short"
+    },
+    {
+      "BreedID": 3,
+      "Name": "Bulldog",
+      "MaxIdealTemperature": 20,
+      "MinIdealTemperature": 18,
+      "MaxIdealHumidity": 65,
+      "MinIdealHumidity": 30,
+      "AvgSize": 40,
+      "AvgWeight": 24,
+      "CoatType": "Short"
+    },
+    {
+      "BreedID": 4,
+      "Name": "Golden Retriever",
+      "MaxIdealTemperature": 24,
+      "MinIdealTemperature": 16,
+      "MaxIdealHumidity": 75,
+      "MinIdealHumidity": 25,
+      "AvgSize": 58,
+      "AvgWeight": 31,
+      "CoatType": "Long"
+    },
+    {
+      "BreedID": 5,
+      "Name": "Beagle",
+      "MaxIdealTemperature": 22,
+      "MinIdealTemperature": 15,
+      "MaxIdealHumidity": 70,
+      "MinIdealHumidity": 30,
+      "AvgSize": 40,
+      "AvgWeight": 11,
+      "CoatType": "Short"
+    },
+    {
+      "BreedID": 6,
+      "Name": "Siberian Husky",
+      "MaxIdealTemperature": 20,
+      "MinIdealTemperature": -10,
+      "MaxIdealHumidity": 65,
+      "MinIdealHumidity": 20,
+      "AvgSize": 55,
+      "AvgWeight": 23,
+      "CoatType": "Medium"
+    },
+    {
+      "BreedID": 7,
+      "Name": "Chihuahua",
+      "MaxIdealTemperature": 26,
+      "MinIdealTemperature": 18,
+      "MaxIdealHumidity": 75,
+      "MinIdealHumidity": 35,
+      "AvgSize": 20,
+      "AvgWeight": 2.5,
+      "CoatType": "Short"
+    },
+    {
+      "BreedID": 8,
+      "Name": "Boxer",
+      "MaxIdealTemperature": 22,
+      "MinIdealTemperature": 16,
+      "MaxIdealHumidity": 70,
+      "MinIdealHumidity": 30,
+      "AvgSize": 55,
+      "AvgWeight": 30,
+      "CoatType": "Short"
+    },
+    {
+      "BreedID": 9,
+      "Name": "Dachshund",
+      "MaxIdealTemperature": 24,
+      "MinIdealTemperature": 18,
+      "MaxIdealHumidity": 75,
+      "MinIdealHumidity": 30,
+      "AvgSize": 22,
+      "AvgWeight": 10,
+      "CoatType": "Short"
+    },
+    {
+      "BreedID": 10,
+      "Name": "Poodle",
+      "MaxIdealTemperature": 24,
+      "MinIdealTemperature": 16,
+      "MaxIdealHumidity": 70,
+      "MinIdealHumidity": 35,
+      "AvgSize": 45,
+      "AvgWeight": 20,
+      "CoatType": "Long"
+    }
+  ],
+  "Devices": [
+    {
+      "DeviceID": 1,
+      "Name": "Temperature Sensor",
+      "MeasureType": "Temperature",
+      "MeasureUnit": "C",
+      "Measurements":[],
+      "CommunicationParadigm": [
+        "Rest",
+        "MQTT"
+      ],
+      "Availability": true
+    },
+    {
+      "DeviceID": 2,
+      "Name": "Humidity Sensor",
+      "MeasureType": "Humidity",
+      "MeasureUnit": "%",
+      "Measurements":[],
+      "CommunicationParadigm": [
+        "Rest",
+        "MQTT"
+      ],
+      "Availability": true
+    },
+    {
+      "DeviceID": 3,
+      "Name": "Motion Sensor",
+      "MeasureType": "Motion",
+      "MeasureUnit": "Boolean",
+      "Measurements":[],
+      "CommunicationParadigm": [
+        "Rest",
+        "MQTT"
+      ],
+      "Availability": true
+    },
+    {
+      "DeviceID": 4,
+      "Name": "Red Led",
+      "MeasureType": "None",
+      "MeasureUnit": "Boolean",
+      "Status":"off",
+      "CommunicationParadigm": [
+        "Rest",
+        "MQTT"
+      ],
+      "Availability": true
+    },
+    {
+      "DeviceID": 5,
+      "Name": "Yellow Led",
+      "MeasureType": "None",
+      "MeasureUnit": "Boolean",
+      "Status":"off",
+      "CommunicationParadigm": [
+        "Rest",
+        "MQTT"
+      ],
+      "Availability": true
+    },
+    {
+      "DeviceID": 6,
+      "Name": "Green Led",
+      "MeasureType": "None",
+      "MeasureUnit": "Boolean",
+      "Status":"off",
+      "CommunicationParadigm": [
+        "Rest",
+        "MQTT"
+      ],
+      "Availability": true
+    }
+  ],
+  "Dogs": [
+    {
+      "DogID": 1,
+      "Name": "Fuffi",
+      "Breed": "German Shepherd",
+      "Owner": "John Doe",
+      "Age": 5,
+      "Sex": 0,
+      "Size": 63,
+      "Weight": 37,
+      "CoatType": "Medium",
+      "Allergies": [
+        "Pollen"
+      ]
+    }
+  ],
+  "Kennels": [
+    {
+      "KennelID": 1,
+      "Location": [123,456],
+      "Size": "Medium",
+      "CurrentOccupancy": true,
+      "TemperatureControl": true,
+      "HumidityControl": true,
+      "VentilationSystem": true,
+      "LightingSystem": "LED",
+      "HeatingSystem": "Radiant",
+      "WaterDispenser": true,
+      "FeederSystem": true,
+      "KennelStatus": true,
+      "LastMaintenance": "2024-07-15"
+    }
+  ]
 }
