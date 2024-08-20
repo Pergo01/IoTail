@@ -31,10 +31,10 @@ class Led:
 
 
 if __name__ == "__main__":
-    settings = json.load(open("../mqtt_settings.json"))
+    settings = json.load(open("mqtt_settings.json"))
     led = Led(21, "Subscriber", settings["broker"], settings["port"])
     led.start()
-    led.subscribe(settings["baseTopic"], 0)
+    led.subscribe(settings["baseTopic"] + "/kennel1/leds/redled", 0)
     while True:
         try:
             time.sleep(1)
