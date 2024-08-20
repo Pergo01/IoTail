@@ -3,6 +3,7 @@ import time
 import json
 import board
 import adafruit_dht
+import datetime
 
 
 class TempHumidSensor:
@@ -25,7 +26,7 @@ class TempHumidSensor:
 
 
 if __name__ == "__main__":
-    settings = json.load(open("../mqtt_settings.json"))
+    settings = json.load(open("mqtt_settings.json"))
     temp_humid_sensor = TempHumidSensor(
         "TempHumidSensor", settings["broker"], settings["port"]
     )
@@ -36,7 +37,25 @@ if __name__ == "__main__":
             temp = temp_humid_sensor.temp_humid_sensor.temperature
             humid = temp_humid_sensor.temp_humid_sensor.humidity
             temp_humid_sensor.publish(
-                settings["baseTopic"], {"temperature": temp, "humidity": humid}, 2
+                settings["baseTopic"] + "/kennel1/sensors/temp_humid",
+                {
+                    "bn": "TempHumidSensor",
+                    "e": [
+                        {
+                            "n": "temperature",
+                            "u": "Cel",
+                            "t": datetime.datetime.now().timestamp(),
+                            "v": temp,
+                        },
+                        {
+                            "n": "humidity",
+                            "u": "%",
+                            "t": datetime.datetime.now().timestamp(),
+                            "v": humid,
+                        },
+                    ],
+                },
+                2,
             )
             time.sleep(1)
         except RuntimeError as error:
@@ -45,8 +64,10 @@ if __name__ == "__main__":
             time.sleep(2.0)
             continue
         except Exception as error:
-            dhtDevice.exit()
+            temp_humid_sensor.exit()
             raise error
         except KeyboardInterrupt:
             break
     temp_humid_sensor.stop()
+
+
