@@ -5,6 +5,7 @@ import board
 import adafruit_dht
 import datetime
 import cherrypy
+import socket
 
 
 class TempHumidSensor:
@@ -55,6 +56,10 @@ if __name__ == "__main__":
     temp_humid_sensor = TempHumidSensor(
         "TempHumidSensor", settings["broker"], settings["port"]
     )
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
     temp_humid_sensor.start()
     conf = {
         "/": {
@@ -63,8 +68,8 @@ if __name__ == "__main__":
         }
     }
     cherrypy.tree.mount(temp_humid_sensor, "/", conf)
-    cherrypy.config.update({"server.socket_host": "172.20.10.2"})
-    cherrypy.config.update({"server.socket_port": 8080})
+    cherrypy.config.update({"server.socket_host": ip})
+    cherrypy.config.update({"server.socket_port": 8083})
     cherrypy.engine.start()
 
     while True:

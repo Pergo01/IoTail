@@ -4,6 +4,7 @@ import time
 import json
 import datetime
 import cherrypy
+import socket
 
 
 class PIRSensor:
@@ -44,6 +45,10 @@ class PIRSensor:
 if __name__ == "__main__":
     settings = json.load(open("mqtt_settings.json"))
     motion_sensor = PIRSensor("MotionSensor", settings["broker"], settings["port"])
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
     motion_sensor.start()
     conf = {
         "/": {
@@ -52,8 +57,8 @@ if __name__ == "__main__":
         }
     }
     cherrypy.tree.mount(motion_sensor, "/", conf)
-    cherrypy.config.update({"server.socket_host": "172.20.10.2"})
-    cherrypy.config.update({"server.socket_port": 8081})
+    cherrypy.config.update({"server.socket_host": ip})
+    cherrypy.config.update({"server.socket_port": 8082})
     cherrypy.engine.start()
 
     while True:
