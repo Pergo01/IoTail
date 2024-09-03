@@ -29,11 +29,14 @@ services:
 
   camera:
     build: ./camera
+    ports:
+      - "8090:8090"
+      - "8091:8091"
     volumes:
       - ./camera:/app
       - ./settings.json:/app/settings.json
-    #devices:
-    #  - "/dev/video0:/dev/video0"
+    devices:
+      - /dev/video0:/dev/video0
     depends_on:
       - catalog
       - mosquitto
@@ -89,17 +92,17 @@ services:
     networks:
       - iotail_network
 
-  mobile_app_simulator:
-    build: ./mobile_app_simulator
-    volumes:
-      - ./mobile_app_simulator:/app
-      - ./settings.json:/app/settings.json
-    depends_on:
-      - catalog
-      - mosquitto
-    restart: always
-    networks:
-      - iotail_network
+  #mobile_app_simulator:
+   # build: ./mobile_app_simulator
+    #volumes:
+     # - ./mobile_app_simulator:/app
+     # - ./settings.json:/app/settings.json
+    #depends_on:
+     # - catalog
+     # - mosquitto
+    #restart: always
+    #networks:
+     # - iotail_network
 
   node-red:
     image: nodered/node-red:latest
