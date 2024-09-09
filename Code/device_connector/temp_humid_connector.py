@@ -69,7 +69,7 @@ if __name__ == "__main__":
     }
     cherrypy.tree.mount(temp_humid_sensor, "/", conf)
     cherrypy.config.update({"server.socket_host": ip})
-    cherrypy.config.update({"server.socket_port": 8083})
+    cherrypy.config.update({"server.socket_port": 8082})
     cherrypy.engine.start()
 
     while True:

@@ -3,5 +3,7 @@ Code/Libraries/__pycache__/*
 Code/node-red-data/*
 Code/settings.json
 Code/device_connector/__pycache__/*
+Code/device_connector/Libraries/*
+Code/device_connector/mqtt_settings.json
 
 !Code/node-red-data/node-red-flow.json

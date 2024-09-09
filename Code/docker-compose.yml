@@ -1,4 +1,4 @@
-version: '3'
+# version: '3'
 services:
   catalog:
     build: ./catalog
@@ -15,11 +15,19 @@ services:
 
   device_connector:
     build: ./device_connector
+    privileged: true
+    ports:
+      - "8081:8081"
+      - "8082:8082"
     environment:
       - MQTT_HOST=mosquitto
     volumes:
       - ./device_connector:/app
       - ./settings.json:/app/settings.json
+      - ./Libraries:/app/Libraries
+      - ./mqtt_settings.json:/app/mqtt_settings.json
+    devices:
+      - /dev/gpiomem:/dev/gpiomem
     depends_on:
       - catalog
       - mosquitto

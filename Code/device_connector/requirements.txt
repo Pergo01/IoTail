@@ -1,2 +1,11 @@
+RPi.GPIO==0.7.1
+opencv-python==4.5.3.56
 paho-mqtt==1.6.1
 requests==2.26.0
+CherryPy==18.10.0
+numpy==1.21.0
+gpiozero==2.0.1
+lgpio==0.2.2.0
+pyserial==3.5
+adafruit_blinka
+adafruit-circuitpython-dht
