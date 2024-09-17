@@ -1,49 +1,74 @@
-import cv2
-import paho.mqtt.client as mqtt
+from Libraries import Subscriber
 import json
-import requests
-import base64
+import time
+import subprocess
+import sys
+import socket
+
 
 class Camera:
-    def __init__(self, settings_file):
-        with open(settings_file) as f:
-            self.settings = json.load(f)
-        
-        self.client = mqtt.Client()
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
+    def __init__(self, clientID, broker, port, ip):
+        self.clientID = clientID
+        self.broker = broker
+        self.port = port
+        self.client = Subscriber(clientID, broker, port, self)
+        self.stream_process = None
+        self.ip = ip
 
-        self.catalog_url = self.settings['catalog_url']
-       #self.broker_info = self.get_broker_info()
+    def start(self):
+        self.client.start()
+        time.sleep(1)
 
-        self.camera = cv2.VideoCapture(0)
-    '''
-    def get_broker_info(self):
-        response = requests.get(f"{self.catalog_url}/broker")
-        return json.loads(response.text)
-    '''
-    def connect(self):
-        self.client.connect("mosquitto", 1883, 60)
+    def notify(self, topic, msg):
+        message = json.loads(msg)
+        # print(message)
+        if message["message"] == "on" and self.stream_process is None:
+            print("Starting the camera stream...")
+            self.stream_process = self.run()
+        elif message["message"] == "off" and self.stream_process is not None:
+            print("Stopping the camera stream...")
+            self.close()
+            self.stream_process = None
 
-    def on_connect(self, client, userdata, flags, rc):
-        print(f"Connected with result code {rc}")
-        self.client.subscribe("IoTail/+/camera/activate")
+    def subscribe(self, topic, QoS):
+        self.client.subscribe(topic, QoS)
 
-    def on_message(self, client, userdata, msg):
-        if msg.topic.endswith("/camera/activate"):
-            self.activate_camera()
-
-    def activate_camera(self):
-        ret, frame = self.camera.read()
-        if ret:
-            _, buffer = cv2.imencode('.jpg', frame)
-            jpg_as_text = base64.b64encode(buffer).decode('utf-8')
-            self.client.publish("IoTail/kennel1/camera/frame", jpg_as_text)
+    def stop(self):
+        self.client.stop()
 
     def run(self):
-        self.connect()
-        self.client.loop_forever()
+        try:
+            # Run the mjpeg-streamer command as a subprocess
+            command = (
+                "mjpeg-streamer --host "
+                + ip
+                + ' --port 8090 -s 0 --prefix "camera" --width 1920 --height 1080 --quality 75 --fps 30 &'
+            )
+            return subprocess.Popen(command, shell=True)
+        except Exception as e:
+            print(f"Error starting stream: {e}")
+            sys.exit(1)
+
+    def close(self):
+        if self.stream_process:
+            self.stream_process.terminate()
+        command = 'killall mjpeg-streamer'
+        print("Stream stopped.")
+        return subprocess.Popen(command, shell=True)
+
 
 if __name__ == "__main__":
-    camera = Camera("settings.json")
-    camera.run()
+    settings = json.load(open("mqtt_settings.json"))
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    camera = Camera("Camera", settings["broker"], settings["port"], ip)
+    camera.start()
+    camera.subscribe(settings["baseTopic"] + "/kennel1/camera", 0)
+    while True:
+        try:
+            time.sleep(1)
+        except KeyboardInterrupt:
+            break
+    camera.stop()

@@ -39,10 +39,13 @@ services:
     build: ./camera
     ports:
       - "8090:8090"
-      - "8091:8091"
+    environment:
+      - MQTT_HOST=mosquitto
     volumes:
       - ./camera:/app
       - ./settings.json:/app/settings.json
+      - ./Libraries:/app/Libraries
+      - ./mqtt_settings.json:/app/mqtt_settings.json
     devices:
       - /dev/video0:/dev/video0
     depends_on:

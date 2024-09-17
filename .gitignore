@@ -5,5 +5,7 @@ Code/settings.json
 Code/device_connector/__pycache__/*
 Code/device_connector/Libraries/*
 Code/device_connector/mqtt_settings.json
+Code/camera/__pycache__/*
+Code/camera/mqtt_settings.json
 
 !Code/node-red-data/node-red-flow.json
