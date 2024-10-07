@@ -25,7 +25,7 @@ class PIRSensor:
 
     def stop(self):
         self.client.stop()
-        
+
     def GET(self):
         return json.dumps(
             {
@@ -60,6 +60,22 @@ if __name__ == "__main__":
     cherrypy.config.update({"server.socket_host": ip})
     cherrypy.config.update({"server.socket_port": 8081})
     cherrypy.engine.start()
+
+    motion_sensor.publish(
+        settings["baseTopic"] + "/kennel1/sensors/motion",
+        {
+            "bn": "MotionSensor",
+            "e": [
+                {
+                    "n": "motion",
+                    "u": "bool",
+                    "t": datetime.datetime.now().timestamp(),
+                    "v": False,
+                }
+            ],
+        },
+        2,
+    )  # Initialize motion sensor status for plots on thingspeak and nodered
 
     while True:
         try:

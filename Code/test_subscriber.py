@@ -19,7 +19,7 @@ class test:
 
     def notify(self, topic, msg):
         message = json.loads(msg)
-        print(message)
+        print(topic, message)
 
     def subscribe(self, topic, QoS):
         self.client.subscribe(topic, QoS)
@@ -31,7 +31,7 @@ class test:
 settings = json.load(open("mqtt_settings.json"))
 subscriber = test("Subscriber", settings["broker"], settings["port"])
 subscriber.start()
-subscriber.subscribe(settings["baseTopic"], 0)
+subscriber.subscribe(settings["baseTopic"] + "/#", 0)
 while True:
     try:
         time.sleep(1)

@@ -84,6 +84,8 @@ services:
     volumes:
       - ./thingspeak_adaptor:/app
       - ./settings.json:/app/settings.json
+      - ./mqtt_settings.json:/app/mqtt_settings.json
+      - ./Libraries:/app/Libraries
     depends_on:
       - catalog
       - mosquitto

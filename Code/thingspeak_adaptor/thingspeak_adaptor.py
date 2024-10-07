@@ -1,50 +1,81 @@
-import paho.mqtt.client as mqtt
 import json
 import requests
+from Libraries import Subscriber
 import time
 
+
 class ThingspeakAdaptor:
-    def __init__(self, settings_file):
-        with open(settings_file) as f:
+    def __init__(self, clientID, broker, port):
+        with open("settings.json") as f:
             self.settings = json.load(f)
-        
-        self.client = mqtt.Client()
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
 
-        self.catalog_url = self.settings['catalog_url']
-       #self.broker_info = self.get_broker_info()
-        self.thingspeak_api_key = self.settings['thingspeak_api_key']
-        self.thingspeak_url = f"https://api.thingspeak.com/update?api_key={self.thingspeak_api_key}"
-    '''
-    def get_broker_info(self):
-        response = requests.get(f"{self.catalog_url}/broker")
-        return json.loads(response.text)
-    '''
-    def connect(self):
-        self.client.connect("mosquitto", 1883, 60)
+        self.clientID = clientID
+        self.broker = broker
+        self.port = port
+        self.client = Subscriber(clientID, broker, port, self)
 
-    def on_connect(self, client, userdata, flags, rc):
-        print(f"Connected with result code {rc}")
-        self.client.subscribe("IoTail/+/sensors")
+        self.catalog_url = self.settings["catalog_url"]
+        self.thingspeak_api_key = self.settings["thingspeak_api_key"]
+        self.thingspeak_url = (
+            f"https://api.thingspeak.com/update?api_key={self.thingspeak_api_key}"
+        )
 
-    def on_message(self, client, userdata, msg):
-        data = json.loads(msg.payload.decode())
-        self.send_to_thingspeak(data)
+        # Dizionario per tenere traccia dei valori piÃ¹ recenti
+        self.latest_values = {"temperature": None, "humidity": None, "motion": None}
 
-    def send_to_thingspeak(self, data):
+    def start(self):
+        self.client.start()
+        time.sleep(1)
+
+    def subscribe(self, topic, QoS):
+        self.client.subscribe(topic, QoS)
+
+    def notify(self, topic, msg):
+        try:
+            data = json.loads(msg)
+            if "e" in data:
+                for entry in data["e"]:
+                    if entry["n"] == "temperature":
+                        self.latest_values["temperature"] = entry["v"]
+                    elif entry["n"] == "humidity":
+                        self.latest_values["humidity"] = entry["v"]
+                    elif entry["n"] == "motion":
+                        self.latest_values["motion"] = 1 if entry["v"] else 0
+
+                self.send_to_thingspeak()
+        except json.JSONDecodeError:
+            print(f"Failed to parse message: {msg.payload.decode()}")
+
+    def send_to_thingspeak(self):
         payload = {
-            "field1": data['temperature'],
-            "field2": data['humidity'],
-            "field3": data['motion']
+            "field1": self.latest_values["temperature"],
+            "field2": self.latest_values["humidity"],
+            "field3": self.latest_values["motion"],
         }
-        response = requests.get(self.thingspeak_url, params=payload)
-        print(f"Sent to Thingspeak: {response.status_code}")
 
-    def run(self):
-        self.connect()
-        self.client.loop_forever()
+        # Invia solo i campi che hanno un valore
+        payload = {k: v for k, v in payload.items() if v is not None}
+
+        if payload:
+            response = requests.get(self.thingspeak_url, params=payload)
+            print(f"Sent to Thingspeak: {response.status_code}, Data: {payload}")
+        else:
+            print("No data to send to ThingSpeak")
+
+    def stop(self):
+        self.client.stop()
+
 
 if __name__ == "__main__":
-    adaptor = ThingspeakAdaptor("settings.json")
-    adaptor.run()
+    settings = json.load(open("mqtt_settings.json"))
+    adaptor = ThingspeakAdaptor(
+        "ThingspeakAdaptor", settings["broker"], settings["port"]
+    )
+    adaptor.start()
+    adaptor.subscribe(settings["baseTopic"] + "/+/sensors/#", 0)
+    while True:
+        try:
+            time.sleep(1)
+        except KeyboardInterrupt:
+            break
+    adaptor.stop()
