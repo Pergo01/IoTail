@@ -189,12 +189,27 @@
       "Availability": true
     }
   ],
+  "Users": [
+    {
+      "UserID": 1,
+      "Name": "Claudio Sulas",
+      "Email": "claudiosulas@example.com",
+      "PhoneNumber": "+1234567890",
+      "Dogs": [
+        {
+          "DogID": 1,
+          "Name": "Fuffi",
+          "Breed": "German Shepherd"
+        }
+      ]
+    }
+  ],
   "Dogs": [
     {
       "DogID": 1,
       "Name": "Fuffi",
       "Breed": "German Shepherd",
-      "Owner": "John Doe",
+      "Owner": "Claudio Sulas",
       "Age": 5,
       "Sex": 0,
       "Size": 63,
@@ -220,6 +235,16 @@
       "FeederSystem": true,
       "KennelStatus": true,
       "LastMaintenance": "2024-07-15"
+    }
+  ],
+  "Bookings": [
+    {
+      "BookingID": 1,
+      "UserID": 1,
+      "KennelID": 1,
+      "BookingToken": "abc123token",
+      "BookingDateTime": "11-10-2024 14:30",
+      "Status": "Confirmed"
     }
   ]
 }
