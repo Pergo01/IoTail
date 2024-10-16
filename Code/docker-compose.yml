@@ -123,6 +123,12 @@ services:
       - "1880:1880"
     volumes:
       - ./node-red-data:/data
+    environment:
+      - NODE_RED_ENABLE_PROJECTS=true
+    command: >
+      sh -c "npm install node-red-dashboard &&
+             npm install node-red-node-ui-table &&
+             node-red"
     restart: always
     networks:
       - iotail_network
