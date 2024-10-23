@@ -76,6 +76,7 @@ if __name__ == "__main__":
         try:
             temp = temp_humid_sensor.temp_humid_sensor.temperature
             humid = temp_humid_sensor.temp_humid_sensor.humidity
+            time = datetime.datetime.now().timestamp()
             temp_humid_sensor.publish(
                 settings["baseTopic"] + "/kennel1/sensors/temp_humid",
                 {
@@ -84,13 +85,13 @@ if __name__ == "__main__":
                         {
                             "n": "temperature",
                             "u": "Cel",
-                            "t": datetime.datetime.now().timestamp(),
+                            "t": time,
                             "v": temp,
                         },
                         {
                             "n": "humidity",
                             "u": "%",
-                            "t": datetime.datetime.now().timestamp(),
+                            "t": time,
                             "v": humid,
                         },
                     ],
