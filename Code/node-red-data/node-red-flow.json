@@ -1,55 +1,69 @@
 [
     {
         "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "IoTail Monitoring",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "77f1a7ed.1c4c58",
         "type": "mqtt in",
-        "z": "3b7cb1d7.7293de",
+        "z": "f6f2187d.f17ca8",
         "name": "IoTail Sensors",
-        "topic": "IoTail/+/sensors",
+        "topic": "IoTail/kennel1/sensors",
         "qos": "2",
         "datatype": "json",
-        "broker": "8a7f3876.179b48",
+        "broker": "b029be69.2a61",
+        "nl": false,
+        "rap": true,
         "x": 130,
-        "y": 80,
+        "y": 180,
         "wires": [
             [
-                "17832d7b.841fdb"
+                "c12345.split"
             ]
         ]
     },
     {
-        "id": "17832d7b.841fdb",
+        "id": "c12345.split",
         "type": "function",
-        "z": "3b7cb1d7.7293de",
-        "name": "Process Data",
-        "func": "msg.payload = {\n    temperature: msg.payload.temperature,\n    humidity: msg.payload.humidity,\n    motion: msg.payload.motion\n};\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "x": 340,
-        "y": 80,
+        "z": "f6f2187d.f17ca8",
+        "name": "Split Data",
+        "func": "return [\n    { payload: msg.payload.temperature },\n    { payload: msg.payload.humidity },\n    { payload: msg.payload.motion }\n];",
+        "outputs": 3,
+        "x": 310,
+        "y": 180,
         "wires": [
             [
-                "7e9fb3c9.faa91c"
+                "temp.chart"
+            ],
+            [
+                "humid.chart"
+            ],
+            [
+                "motion.chart"
             ]
         ]
     },
     {
-        "id": "7e9fb3c9.faa91c",
+        "id": "temp.chart",
         "type": "ui_chart",
-        "z": "3b7cb1d7.7293de",
-        "name": "IoTail Dashboard",
-        "group": "4e8063d4.62c43c",
-        "order": 0,
-        "width": 0,
-        "height": 0,
-        "label": "Kennel Data",
+        "z": "f6f2187d.f17ca8",
+        "name": "Temperature",
+        "group": "g1",
+        "order": 1,
+        "width": "0",
+        "height": "0",
+        "label": "Temperature (°C)",
         "chartType": "line",
         "legend": "false",
         "xformat": "HH:mm:ss",
         "interpolate": "linear",
         "nodata": "",
         "dot": false,
-        "ymin": "",
-        "ymax": "",
+        "ymin": "15",
+        "ymax": "30",
         "removeOlder": 1,
         "removeOlderPoints": "",
         "removeOlderUnit": "3600",
@@ -57,16 +71,137 @@
         "useOneColor": false,
         "useUTC": false,
         "colors": [
-            "#1f77b4",
-            "#aec7e8",
             "#ff7f0e"
         ],
         "outputs": 1,
         "useDifferentColor": false,
-        "x": 560,
-        "y": 80,
-        "wires": [
-            []
-        ]
+        "x": 500,
+        "y": 120,
+        "wires": [[]]
+    },
+    {
+        "id": "humid.chart",
+        "type": "ui_chart",
+        "z": "f6f2187d.f17ca8",
+        "name": "Humidity",
+        "group": "g2",
+        "order": 2,
+        "width": "0",
+        "height": "0",
+        "label": "Humidity (%)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "20",
+        "ymax": "80",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "x": 500,
+        "y": 180,
+        "wires": [[]]
+    },
+    {
+        "id": "motion.chart",
+        "type": "ui_chart",
+        "z": "f6f2187d.f17ca8",
+        "name": "Motion",
+        "group": "g3",
+        "order": 3,
+        "width": "0",
+        "height": "0",
+        "label": "Motion Detection",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "step",
+        "nodata": "",
+        "dot": true,
+        "ymin": "0",
+        "ymax": "1",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#2ca02c"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "x": 500,
+        "y": 240,
+        "wires": [[]]
+    },
+    {
+        "id": "b029be69.2a61",
+        "type": "mqtt-broker",
+        "name": "IoTail Broker",
+        "broker": "mosquitto",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "g1",
+        "type": "ui_group",
+        "name": "Temperature",
+        "tab": "t1",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "g2",
+        "type": "ui_group",
+        "name": "Humidity",
+        "tab": "t1",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "g3",
+        "type": "ui_group",
+        "name": "Motion",
+        "tab": "t1",
+        "order": 3,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "t1",
+        "type": "ui_tab",
+        "name": "IoTail Monitor",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
     }
 ]
