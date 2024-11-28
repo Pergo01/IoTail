@@ -13,47 +13,47 @@ services:
     networks:
       - iotail_network
 
-  device_connector:
-    build: ./device_connector
-    privileged: true
-    ports:
-      - "8081:8081"
-      - "8082:8082"
-    environment:
-      - MQTT_HOST=mosquitto
-    volumes:
-      - ./device_connector:/app
-      - ./settings.json:/app/settings.json
-      - ./Libraries:/app/Libraries
-      - ./mqtt_settings.json:/app/mqtt_settings.json
-    devices:
-      - /dev/gpiomem:/dev/gpiomem
-    depends_on:
-      - catalog
-      - mosquitto
-    restart: always
-    networks:
-      - iotail_network
+  # device_connector:
+  #   build: ./device_connector
+  #   privileged: true
+  #   ports:
+  #     - "8081:8081"
+  #     - "8082:8082"
+  #   environment:
+  #     - MQTT_HOST=mosquitto
+  #   volumes:
+  #     - ./device_connector:/app
+  #     - ./settings.json:/app/settings.json
+  #     - ./Libraries:/app/Libraries
+  #     - ./mqtt_settings.json:/app/mqtt_settings.json
+  #   devices:
+  #     - /dev/gpiomem:/dev/gpiomem
+  #   depends_on:
+  #     - catalog
+  #     - mosquitto
+  #   restart: always
+  #   networks:
+  #     - iotail_network
 
-  camera:
-    build: ./camera
-    ports:
-      - "8090:8090"
-    environment:
-      - MQTT_HOST=mosquitto
-    volumes:
-      - ./camera:/app
-      - ./settings.json:/app/settings.json
-      - ./Libraries:/app/Libraries
-      - ./mqtt_settings.json:/app/mqtt_settings.json
-    devices:
-      - /dev/video0:/dev/video0
-    depends_on:
-      - catalog
-      - mosquitto
-    restart: always
-    networks:
-      - iotail_network
+  # camera:
+  #   build: ./camera
+  #   ports:
+  #     - "8090:8090"
+  #   environment:
+  #     - MQTT_HOST=mosquitto
+  #   volumes:
+  #     - ./camera:/app
+  #     - ./settings.json:/app/settings.json
+  #     - ./Libraries:/app/Libraries
+  #     - ./mqtt_settings.json:/app/mqtt_settings.json
+  #   devices:
+  #     - /dev/video0:/dev/video0
+  #   depends_on:
+  #     - catalog
+  #     - mosquitto
+  #   restart: always
+  #   networks:
+  #     - iotail_network 
 
   data_analysis:
     build: ./data_analysis
@@ -69,6 +69,8 @@ services:
 
   reservation_manager:
     build: ./reservation_manager
+    ports:
+      - "8083:8083"
     volumes:
       - ./reservation_manager:/app
       - ./settings.json:/app/settings.json

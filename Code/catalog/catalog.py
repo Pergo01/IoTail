@@ -2,6 +2,7 @@ import cherrypy
 import json
 import time
 import os
+import socket
 
 class Catalog:
     exposed = True
@@ -34,9 +35,13 @@ class Catalog:
         elif uri[0] == 'broker':
             return json.dumps(self.catalog_data['broker'])
         elif uri[0] == 'devices':
-            return json.dumps(self.catalog_data['deviceList'])
+            return json.dumps(self.catalog_data['Devices'])
         elif uri[0] == 'services':
             return json.dumps(self.catalog_data['serviceList'])
+        elif uri[0] == 'kennels':
+            return json.dumps(self.catalog_data['Kennels'])
+        elif uri[0] == 'dogs':
+            return json.dumps(self.catalog_data['Dogs'])
         else:
             raise cherrypy.HTTPError(404, "Resource not found")
 
@@ -88,6 +93,10 @@ class Catalog:
         return "200 OK"
 
 if __name__ == '__main__':
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
     conf = {
         '/': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
@@ -95,7 +104,7 @@ if __name__ == '__main__':
         }
     }
     cherrypy.tree.mount(Catalog(), '/', conf)
-    cherrypy.config.update({'server.socket_host': '0.0.0.0'})
+    cherrypy.config.update({'server.socket_host': ip})
     cherrypy.config.update({'server.socket_port': 8080})
     cherrypy.engine.start()
     cherrypy.engine.block()

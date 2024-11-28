@@ -1,69 +1,141 @@
-import paho.mqtt.client as mqtt
+
 import json
-import requests
 import time
+import uuid
+import socket
+import cherrypy
+import requests
 
 class ReservationManager:
-    def __init__(self, settings_file):
-        with open(settings_file) as f:
-            self.settings = json.load(f)
+    exposed = True
+
+    def __init__(self, reservation_file):
         
-        self.client = mqtt.Client()
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
+        response = requests.get(f"http://host.docker.internal:8080/kennels")
+        if response.ok:
+            self.settings = response.json()
+        else: 
+            print("Couldn't get list")    
+            exit(1)
+        self.reservation_file = reservation_file
+        self.total_kennels = len(self.settings)
 
-        self.catalog_url = self.settings['catalog_url']
-       #self.broker_info = self.get_broker_info()
+        # Carica le prenotazioni esistenti dal file, se presente
+        try:
+            with open(self.reservation_file) as f:
+                self.reservations = json.load(f)
+        except FileNotFoundError:
+            self.reservations = {}
 
-        self.reservations = {}
-    '''
-    def get_broker_info(self):
-        response = requests.get(f"{self.catalog_url}/broker")
-        return json.loads(response.text)
-    '''
-    def connect(self):
-        self.client.connect("mosquitto", 1883, 60)
-
-    def on_connect(self, client, userdata, flags, rc):
-        print(f"Connected with result code {rc}")
-        self.client.subscribe("IoTail/reservations/#")
-
-    def on_message(self, client, userdata, msg):
-        if msg.topic.endswith("/request"):
-            self.handle_reservation_request(json.loads(msg.payload.decode()))
-        elif msg.topic.endswith("/cancel"):
-            self.handle_cancellation(json.loads(msg.payload.decode()))
-
-    def handle_reservation_request(self, data):
-        kennel_id = self.find_available_kennel()
-        if kennel_id:
-            self.reservations[kennel_id] = data
-            response = {"status": "confirmed", "kennel_id": kennel_id}
-        else:
-            response = {"status": "unavailable"}
-        self.client.publish("IoTail/reservations/response", json.dumps(response))
-
-    def handle_cancellation(self, data):
-        kennel_id = data.get('kennel_id')
-        if kennel_id in self.reservations:
-            del self.reservations[kennel_id]
-            response = {"status": "cancelled"}
-        else:
-            response = {"status": "not_found"}
-        self.client.publish("IoTail/reservations/response", json.dumps(response))
+    def save_reservations(self):
+        """Salva le prenotazioni nel file JSON."""
+        with open(self.reservation_file, "w") as f:
+            json.dump(self.reservations, f, indent=4)
 
     def find_available_kennel(self):
-        # Implement logic to find an available kennel
-        # This is a simplified version
-        for i in range(1, 11):  # Assuming 10 kennels
+        for i in range(1, self.total_kennels + 1):
             if f"kennel{i}" not in self.reservations:
                 return f"kennel{i}"
         return None
 
-    def run(self):
-        self.connect()
-        self.client.loop_forever()
+    def handle_reservation_request(self, data):
+        dog_name = data.get('dog_name')
+        dog_breed = data.get('dog_breed')
+        dog_size = data.get('dog_size')
+        
+        kennel_id = self.find_available_kennel()
+        if kennel_id:
+            reservation_id = str(uuid.uuid4())  # Genera un ID univoco per il cane
+            self.reservations["reservation"].append( {
+                'reservation_id': reservation_id,
+                'dog_name': dog_name,
+                'dog_breed': dog_breed,
+                'dog_size': dog_size,
+                'kennel_id': kennel_id,
+                'timestamp': time.time()
+            })
+            self.save_reservations()
+            return json.dumps({
+                "status": "confirmed", 
+                "kennel_id": kennel_id,
+                "reservation_id": reservation_id,
+                "message": f"Reservation confirmed for {dog_name} ({dog_breed})"
+            })
+        else:
+            return json.dumps({"status": "unavailable", "message": "No kennels available"})
+
+    def handle_cancellation(self, data):
+        reservation_id = data.get("reservation_id")
+        reservation = next(
+            (
+                res
+                for res in self.reservations["reservation"]
+                if (res["reservation_id"]) == reservation_id
+            ),
+            None,
+        )
+        if reservation:
+            self.reservations["reservation"].remove(reservation)
+            self.save_reservations()
+            return json.dumps(
+                {
+                    "status": "cancelled",
+                    "message": f"Reservation for {reservation['dog_name']} in kennel {reservation['kennel_id']} cancelled",
+                }
+            )
+        else:
+            return json.dumps(
+                {
+                    "status": "not_found",
+                    "message": f"No reservation found for id {reservation_id}",
+                }
+            ) 
+
+    
+    def POST(self, *uri):
+        if uri[0] == "reserve":
+            body = cherrypy.request.body.read()
+            data = json.loads(body) 
+            return self.handle_reservation_request(data)
+        elif uri[0] == "cancel":
+            body = cherrypy.request.body.read()
+            data = json.loads(body) 
+            return self.handle_cancellation(data)
+        else:
+            raise cherrypy.HTTPError(404, "Endpoint not found")
+
+    
+    def GET(self, *uri):
+        if uri[0] == "status":
+            return json.dumps(self.reservations["reservation"])
+        else:
+            raise cherrypy.HTTPError(404, "Endpoint not found")
 
 if __name__ == "__main__":
-    manager = ReservationManager("settings.json")
-    manager.run()
+    # Load settings and initialize the manager
+    manager = ReservationManager("reservation.json")
+
+    # Determine the local IP address
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    # CherryPy configuration
+    conf = {
+        "/": {
+            "request.dispatch": cherrypy.dispatch.MethodDispatcher(),
+            "tools.sessions.on": True
+        }
+    }
+
+    # Mount the application and start the server
+    cherrypy.tree.mount(manager, "/", conf)
+    cherrypy.config.update({
+        "server.socket_host": ip,
+        "server.socket_port": 8083,
+        "engine.autoreload.on": False,
+    })
+
+    print(f"Server running at http://{ip}:8083/")
+    cherrypy.engine.start()
+    
