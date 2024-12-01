@@ -38,7 +38,7 @@ class Catalog:
     def register(self, body):
         email_list = [user["Email"] for user in self.catalog_data["Users"]]
         if body["email"] in email_list:
-            return cherrypy.HTTPError(400, "Email already exists")
+            raise cherrypy.HTTPError(400, "Email already exists")
         hashed_password = bcrypt.hashpw(
             body["password"].encode("utf-8"), bcrypt.gensalt()
         ).decode("utf-8")
@@ -81,7 +81,7 @@ class Catalog:
                     "token": user["UserID"],
                 }
             )
-        return cherrypy.HTTPError(
+        raise cherrypy.HTTPError(
             401, "Invalid credentials, please try again or register"
         )
 
@@ -125,8 +125,8 @@ class Catalog:
         else:
             raise cherrypy.HTTPError(400, "Bad request")
 
-        self.save_catalog()
-        return "201 Created"
+        # self.save_catalog()
+        # return "201 Created"
 
     def PUT(self, *uri, **params):
         body = cherrypy.request.body.read()
@@ -177,6 +177,7 @@ if __name__ == "__main__":
         "/": {
             "request.dispatch": cherrypy.dispatch.MethodDispatcher(),
             "tools.sessions.on": True,
+            "request.show_tracebacks": False,
         }
     }
     cherrypy.tree.mount(Catalog(), "/", conf)

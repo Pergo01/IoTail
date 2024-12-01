@@ -7,6 +7,7 @@ services:
     volumes:
       - ./catalog:/app
       - ./settings.json:/app/settings.json
+      - ./catalog/catalog.json:/app/catalog.json
     depends_on:
       - mosquitto
     restart: always
@@ -74,6 +75,7 @@ services:
     volumes:
       - ./reservation_manager:/app
       - ./settings.json:/app/settings.json
+      - ./reservation_manager/reservation.json:/app/reservation.json
     depends_on:
       - catalog
       - mosquitto

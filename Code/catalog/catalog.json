@@ -210,6 +210,14 @@
             "Password": "$2b$12$Bl5h/GhsMVEV5caFrJaiweINUpz2Ya9o3FHmSqS.C5XmrdrzsYxFa",
             "PhoneNumber": "+123456789",
             "Dogs": []
+        },
+        {
+            "UserID": "e8adc250-6db5-4e8e-a7f2-f97cff6f233e",
+            "Name": "Johanna Doe",
+            "Email": "johanna.doe@gmail.com",
+            "Password": "$2b$12$GlMI6I6iHYN64oMTHc9HoOArXdDU8bBAcNZ.Zl6JSyWFYlWWOO/fC",
+            "PhoneNumber": "+987654321",
+            "Dogs": []
         }
     ],
     "Dogs": [
