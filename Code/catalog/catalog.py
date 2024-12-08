@@ -5,6 +5,8 @@ import os
 import socket
 import bcrypt
 import uuid
+import jwt
+import datetime
 
 
 class Catalog:
@@ -12,6 +14,30 @@ class Catalog:
 
     def __init__(self):
         self.catalog_data = self.load_catalog()
+        with open("secret_key.txt") as f:
+            self.secret_key = f.read()
+
+    def generate_token(self, user_id, role):
+        expiration_time = datetime.datetime.now(
+            datetime.timezone.utc
+        ) + datetime.timedelta(hours=1)
+        token = jwt.encode(
+            {"user_id": user_id, "role": role, "exp": expiration_time},
+            self.secret_key,
+            algorithm="HS256",
+        )
+        return token
+
+    def verify_token(self, token):
+        if token == "reservation_manager":
+            return token
+        try:
+            decoded = jwt.decode(token, self.secret_key, algorithms=["HS256"])
+            return decoded
+        except jwt.ExpiredSignatureError:
+            raise cherrypy.HTTPError(401, "Token has expired")
+        except jwt.InvalidTokenError:
+            raise cherrypy.HTTPError(401, "Invalid token")
 
     def load_catalog(self):
         try:
@@ -54,36 +80,36 @@ class Catalog:
             }
         )
         self.save_catalog()
+        role = body.get("role", "Client")  # Default role is "client"
+        token = self.generate_token(userID, role)
         return json.dumps(
             {
                 "status": "success",
                 "message": f"User {body['email']} successfully registered",
-                "token": userID,
+                "token": token,
+                "userID": userID,
             }
         )
 
     def login(self, body):
         user = next(
-            (
-                dic
-                for dic in self.catalog_data["Users"]
-                if (dic["Email"]) == body["email"]
-            ),
+            (u for u in self.catalog_data["Users"] if u["Email"] == body["email"]),
             None,
         )
         if user and bcrypt.checkpw(
             body["password"].encode("utf-8"), user["Password"].encode("utf-8")
         ):
+            role = user.get("Role", "client")  # Default role is "client"
+            token = self.generate_token(user["UserID"], role)
             return json.dumps(
                 {
                     "status": "success",
                     "message": f"User {body['email']} successfully logged in",
-                    "token": user["UserID"],
+                    "token": token,
+                    "userID": user["UserID"],
                 }
             )
-        raise cherrypy.HTTPError(
-            401, "Invalid credentials, please try again or register"
-        )
+        raise cherrypy.HTTPError(401, "Invalid credentials")
 
     # Aggiungere metodo per gestire le prenotazioni dei kennel
     def handle_reservation(self, coordinates: list, kennel: int):
@@ -91,6 +117,11 @@ class Catalog:
         pass
 
     def GET(self, *uri, **params):
+        auth_header = cherrypy.request.headers.get("Authorization")
+        if not auth_header:
+            raise cherrypy.HTTPError(401, "Authorization token required")
+        token = auth_header.split(" ")[1]
+        self.verify_token(token)  # Verify the token
         if len(uri) == 0:
             return json.dumps(self.catalog_data)
         elif uri[0] == "broker":
@@ -103,30 +134,52 @@ class Catalog:
             return json.dumps(self.catalog_data["Kennels"])
         elif uri[0] == "dogs":
             return json.dumps(self.catalog_data["Dogs"])
+        elif uri[0] == "breeds":
+            return json.dumps(self.catalog_data["Breeds"])
         elif uri[0] == "users":
+            if len(uri) > 1:
+                user = next(
+                    (u for u in self.catalog_data["Users"] if u["UserID"] == uri[1]),
+                    None,
+                )
+                return json.dumps(user)
             return json.dumps(self.catalog_data["Users"])
+        elif uri[0] == "stores":
+            return json.dumps(self.catalog_data["Stores"])
         else:
             raise cherrypy.HTTPError(404, "Resource not found")
 
     def POST(self, *uri, **params):
+        # Routes that do not require authentication
+        public_routes = ["register", "login"]
+
+        # Check if the route is public
+        if uri[0] not in public_routes:
+            # Enforce authentication for all other POST routes
+            auth_header = cherrypy.request.headers.get("Authorization")
+            if not auth_header:
+                raise cherrypy.HTTPError(401, "Authorization token required")
+            token = auth_header.split(" ")[1]
+            self.verify_token(token)  # Verify the token
+
+        # Handle specific POST routes
         body = cherrypy.request.body.read()
         json_body = json.loads(body)
 
-        if uri[0] == "devices":
-            self.catalog_data["deviceList"].append(json_body)
-            return json.dumps({"status": "success", "message": "Device added"})
-        elif uri[0] == "services":
-            self.catalog_data["serviceList"].append(json_body)
-            return json.dumps({"status": "success", "message": "Service added"})
-        elif uri[0] == "register":
+        if uri[0] == "register":
             return self.register(json_body)
         elif uri[0] == "login":
             return self.login(json_body)
+        elif uri[0] == "devices":
+            self.catalog_data["Devices"].append(json_body)
+            self.save_catalog()
+            return json.dumps({"status": "success", "message": "Device added"})
+        elif uri[0] == "services":
+            self.catalog_data["serviceList"].append(json_body)
+            self.save_catalog()
+            return json.dumps({"status": "success", "message": "Service added"})
         else:
             raise cherrypy.HTTPError(400, "Bad request")
-
-        # self.save_catalog()
-        # return "201 Created"
 
     def PUT(self, *uri, **params):
         body = cherrypy.request.body.read()

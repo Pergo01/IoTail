@@ -8,6 +8,7 @@ services:
       - ./catalog:/app
       - ./settings.json:/app/settings.json
       - ./catalog/catalog.json:/app/catalog.json
+      - ./secret_key.txt:/app/secret_key.txt
     depends_on:
       - mosquitto
     restart: always
@@ -76,6 +77,7 @@ services:
       - ./reservation_manager:/app
       - ./settings.json:/app/settings.json
       - ./reservation_manager/reservation.json:/app/reservation.json
+      - ./secret_key.txt:/app/secret_key.txt
     depends_on:
       - catalog
       - mosquitto

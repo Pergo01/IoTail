@@ -122,10 +122,7 @@
             "MeasureType": "Temperature",
             "MeasureUnit": "C",
             "Measurements": [],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -134,10 +131,7 @@
             "MeasureType": "Humidity",
             "MeasureUnit": "%",
             "Measurements": [],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -146,10 +140,7 @@
             "MeasureType": "Motion",
             "MeasureUnit": "Boolean",
             "Measurements": [],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -158,10 +149,7 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -170,10 +158,7 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -182,10 +167,7 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         }
     ],
@@ -195,13 +177,7 @@
             "Name": "Claudio Sulas",
             "Email": "claudiosulas@example.com",
             "PhoneNumber": "+1234567890",
-            "Dogs": [
-                {
-                    "DogID": 1,
-                    "Name": "Fuffi",
-                    "Breed": "German Shepherd"
-                }
-            ]
+            "Dogs": [1]
         },
         {
             "UserID": "2a894e30-43ad-4576-aa17-3e29c26c5740",
@@ -231,20 +207,14 @@
             "Size": 63,
             "Weight": 37,
             "CoatType": "Medium",
-            "Allergies": [
-                "Pollen"
-            ]
+            "Allergies": ["Pollen"]
         }
     ],
     "Kennels": [
         {
             "KennelID": 1,
-            "Location": [
-                123,
-                456
-            ],
             "Size": "Medium",
-            "CurrentOccupancy": true,
+            "CurrentOccupancy": false,
             "TemperatureControl": true,
             "HumidityControl": true,
             "VentilationSystem": true,
@@ -254,6 +224,13 @@
             "FeederSystem": true,
             "KennelStatus": true,
             "LastMaintenance": "2024-07-15"
+        }
+    ],
+    "Stores": [
+        {
+            "Name": "Carrefour",
+            "Location": [123, 456],
+            "Kennels": [1]
         }
     ],
     "Bookings": [
