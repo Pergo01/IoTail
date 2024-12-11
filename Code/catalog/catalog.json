@@ -122,7 +122,10 @@
             "MeasureType": "Temperature",
             "MeasureUnit": "C",
             "Measurements": [],
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         },
         {
@@ -131,7 +134,10 @@
             "MeasureType": "Humidity",
             "MeasureUnit": "%",
             "Measurements": [],
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         },
         {
@@ -140,7 +146,10 @@
             "MeasureType": "Motion",
             "MeasureUnit": "Boolean",
             "Measurements": [],
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         },
         {
@@ -149,7 +158,10 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         },
         {
@@ -158,7 +170,10 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         },
         {
@@ -167,7 +182,10 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         }
     ],
@@ -177,7 +195,9 @@
             "Name": "Claudio Sulas",
             "Email": "claudiosulas@example.com",
             "PhoneNumber": "+1234567890",
-            "Dogs": [1]
+            "Dogs": [
+                1
+            ]
         },
         {
             "UserID": "2a894e30-43ad-4576-aa17-3e29c26c5740",
@@ -207,40 +227,38 @@
             "Size": 63,
             "Weight": 37,
             "CoatType": "Medium",
-            "Allergies": ["Pollen"]
-        }
-    ],
-    "Kennels": [
-        {
-            "KennelID": 1,
-            "Size": "Medium",
-            "CurrentOccupancy": false,
-            "TemperatureControl": true,
-            "HumidityControl": true,
-            "VentilationSystem": true,
-            "LightingSystem": "LED",
-            "HeatingSystem": "Radiant",
-            "WaterDispenser": true,
-            "FeederSystem": true,
-            "KennelStatus": true,
-            "LastMaintenance": "2024-07-15"
+            "Allergies": [
+                "Pollen"
+            ]
         }
     ],
     "Stores": [
         {
             "Name": "Carrefour",
-            "Location": [123, 456],
-            "Kennels": [1]
-        }
-    ],
-    "Bookings": [
-        {
-            "BookingID": 1,
-            "UserID": 1,
-            "KennelID": 1,
-            "BookingToken": "abc123token",
-            "BookingDateTime": "11-10-2024 14:30",
-            "Status": "Confirmed"
+            "Location": [
+                123,
+                456
+            ],
+            "Kennels": [
+                {
+                    "ID": 0,
+                    "Size": "Small",
+                    "Booked": false,
+                    "Occupied": false
+                },
+                {
+                    "ID": 1,
+                    "Size": "Large",
+                    "Booked": false,
+                    "Occupied": false
+                },
+                {
+                    "ID": 2,
+                    "Size": "Medium",
+                    "Booked": false,
+                    "Occupied": false
+                }
+            ]
         }
     ]
 }

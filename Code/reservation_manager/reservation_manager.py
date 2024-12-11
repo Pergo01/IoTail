@@ -13,20 +13,8 @@ class ReservationManager:
     def __init__(self, reservation_file):
         with open("secret_key.txt") as f:
             self.secret_key = f.read()
-        headers = {
-            "Authorization": f"Bearer reservation_manager",
-            "Content-Type": "application/json",
-        }
-        response = requests.get(
-            f"http://host.docker.internal:8080/kennels", headers=headers
-        )
-        if response.ok:
-            self.settings = response.json()
-        else:
-            print("Couldn't get list")
-            exit(1)
+        self.get_stores()
         self.reservation_file = reservation_file
-        self.total_kennels = len(self.settings)
 
         # Carica le prenotazioni esistenti dal file, se presente
         try:
@@ -34,6 +22,20 @@ class ReservationManager:
                 self.reservations = json.load(f)
         except FileNotFoundError:
             self.reservations = {}
+
+    def get_stores(self):
+        headers = {
+            "Authorization": f"Bearer reservation_manager",
+            "Content-Type": "application/json",
+        }
+        response = requests.get(
+            f"http://host.docker.internal:8080/stores", headers=headers
+        )
+        if response.ok:
+            self.settings = response.json()
+        else:
+            print("Couldn't get list")
+            exit(1)
 
     def verify_token(self, token):
         try:
@@ -49,21 +51,30 @@ class ReservationManager:
         with open(self.reservation_file, "w") as f:
             json.dump(self.reservations, f, indent=4)
 
-    def find_available_kennel(self):
-        for i in range(1, self.total_kennels + 1):
-            if f"kennel{i}" not in self.reservations:
-                return f"kennel{i}"
+    def find_available_kennel(self, store):
+        # TODO sort kennel by dimension to fit the dog in the smallest possible kennel in which the dog can fit
+        for kennel in store["Kennels"]:
+            if not kennel["Booked"] and not kennel["Occupied"]:
+                return kennel["ID"]
         return None
 
-    def handle_reservation_request(self, data):
+    def handle_reservation(self, data):
         dog_name = data.get("dog_name")
         dog_breed = data.get("dog_breed")
         dog_size = data.get("dog_size")
         userID = data.get("userID")
+        loc = data.get("location")
 
-        kennelID = self.find_available_kennel()
-        if kennelID:
-            reservationID = str(uuid.uuid4())  # Genera un ID univoco per il cane
+        store = next(
+            (s for s in self.settings if s["Location"] == loc),
+            None,
+        )
+        kennelID = self.find_available_kennel(store)
+        if kennelID is not None:
+            reservationID = str(
+                uuid.uuid4()
+            )  # Genera un ID univoco per la prenotazione
+            self.book_kennel(loc, int(kennelID))
             self.reservations["reservation"].append(
                 {
                     "userID": userID,
@@ -72,10 +83,12 @@ class ReservationManager:
                     "dog_breed": dog_breed,
                     "dog_size": dog_size,
                     "kennelID": kennelID,
+                    "location": loc,
                     "timestamp": time.time(),
                 }
             )
             self.save_reservations()
+            self.get_stores()
             return json.dumps(
                 {
                     "status": "confirmed",
@@ -99,8 +112,10 @@ class ReservationManager:
             None,
         )
         if reservation:
+            self.free_kennel(reservation["location"], reservation["kennelID"])
             self.reservations["reservation"].remove(reservation)
             self.save_reservations()
+            self.get_stores()
             return json.dumps(
                 {
                     "status": "cancelled",
@@ -115,6 +130,36 @@ class ReservationManager:
                 }
             )
 
+    def book_kennel(self, location: list, kennel: int):
+        headers = {
+            "Authorization": "Bearer reservation_manager",
+            "Content-Type": "application/json",
+        }
+        body = json.dumps({"location": location, "kennel": kennel})
+        response = requests.post(
+            f"http://host.docker.internal:8080/book",
+            headers=headers,
+            data=body,
+        )
+        if response.ok:
+            return json.loads(response.text)
+        raise cherrypy.HTTPError(500, "Error booking kennel")
+
+    def free_kennel(self, location: list, kennel: int):
+        headers = {
+            "Authorization": "Bearer reservation_manager",
+            "Content-Type": "application/json",
+        }
+        body = json.dumps({"location": location, "kennel": kennel})
+        response = requests.post(
+            f"http://host.docker.internal:8080/free",
+            headers=headers,
+            data=body,
+        )
+        if response.ok:
+            return json.loads(response.text)
+        raise cherrypy.HTTPError(500, "Error unlocking kennel")
+
     def POST(self, *uri):
         auth_header = cherrypy.request.headers.get("Authorization")
         if not auth_header:
@@ -124,7 +169,7 @@ class ReservationManager:
         if uri[0] == "reserve":
             body = cherrypy.request.body.read()
             data = json.loads(body)
-            return self.handle_reservation_request(data)
+            return self.handle_reservation(data)
         elif uri[0] == "cancel":
             reservationID = uri[1]
             return self.handle_cancellation(reservationID)
@@ -172,6 +217,3 @@ if __name__ == "__main__":
     cherrypy.config.update({"server.socket_port": 8083})
     cherrypy.engine.start()
     cherrypy.engine.block()
-
-    print(f"Server running at http://{ip}:8083/")
-    cherrypy.engine.start()

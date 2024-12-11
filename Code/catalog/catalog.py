@@ -112,9 +112,53 @@ class Catalog:
         raise cherrypy.HTTPError(401, "Invalid credentials")
 
     # Aggiungere metodo per gestire le prenotazioni dei kennel
-    def handle_reservation(self, coordinates: list, kennel: int):
-        # Implementare la logica di prenotazione qui
-        pass
+    def book_kennel(self, body):
+        loc = body["location"]
+        kennel = body["kennel"]
+
+        store = next(
+            (
+                store
+                for store in self.catalog_data["Stores"]
+                if store["Location"] == loc
+            ),
+            None,
+        )
+        if store:
+            k = next((k for k in store["Kennels"] if k["ID"] == kennel), None)
+            if k:
+                k["Booked"] = True
+
+    def lock_kennel(self, body):
+        loc = body["location"]
+        kennel = body["kennel"]
+        store = next(
+            (s for s in self.catalog_data["Stores"] if s["Location"] == loc),
+            None,
+        )
+        if store:
+            kennel = next(
+                (k for k in store["Kennels"] if k["ID"] == kennel),
+                None,
+            )
+            if kennel:
+                kennel["Occupied"] = True
+
+    def free_kennel(self, body):
+        loc = body["location"]
+        kennel = body["kennel"]
+        store = next(
+            (s for s in self.catalog_data["Stores"] if s["Location"] == loc),
+            None,
+        )
+        if store:
+            kennel = next(
+                (k for k in store["Kennels"] if k["ID"] == kennel),
+                None,
+            )
+            if kennel:
+                kennel["Occupied"] = False
+                kennel["Booked"] = False
 
     def GET(self, *uri, **params):
         auth_header = cherrypy.request.headers.get("Authorization")
@@ -130,8 +174,8 @@ class Catalog:
             return json.dumps(self.catalog_data["Devices"])
         elif uri[0] == "services":
             return json.dumps(self.catalog_data["serviceList"])
-        elif uri[0] == "kennels":
-            return json.dumps(self.catalog_data["Kennels"])
+        elif uri[0] == "stores":
+            return json.dumps(self.catalog_data["Stores"])
         elif uri[0] == "dogs":
             return json.dumps(self.catalog_data["Dogs"])
         elif uri[0] == "breeds":
@@ -170,6 +214,18 @@ class Catalog:
             return self.register(json_body)
         elif uri[0] == "login":
             return self.login(json_body)
+        elif uri[0] == "book":
+            self.book_kennel(json_body)
+            self.save_catalog()
+            return json.dumps({"status": "success", "message": "Kennel locked"})
+        elif uri[0] == "lock":
+            self.lock_kennel(json_body)
+            self.save_catalog()
+            return json.dumps({"status": "success", "message": "Kennel locked"})
+        elif uri[0] == "free":
+            self.free_kennel(json_body)
+            self.save_catalog()
+            return json.dumps({"status": "success", "message": "Kennel freed"})
         elif uri[0] == "devices":
             self.catalog_data["Devices"].append(json_body)
             self.save_catalog()
