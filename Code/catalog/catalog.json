@@ -196,7 +196,19 @@
             "Email": "claudiosulas@example.com",
             "PhoneNumber": "+1234567890",
             "Dogs": [
-                1
+                {
+                    "DogID": "oafjfahiuafduj12oieqo0310445",
+                    "Name": "Fuffi",
+                    "Breed": "German Shepherd",
+                    "Age": 5,
+                    "Sex": 0,
+                    "Size": 63,
+                    "Weight": 37,
+                    "CoatType": "Medium",
+                    "Allergies": [
+                        "Pollen"
+                    ]
+                }
             ]
         },
         {
@@ -214,22 +226,6 @@
             "Password": "$2b$12$GlMI6I6iHYN64oMTHc9HoOArXdDU8bBAcNZ.Zl6JSyWFYlWWOO/fC",
             "PhoneNumber": "+987654321",
             "Dogs": []
-        }
-    ],
-    "Dogs": [
-        {
-            "DogID": 1,
-            "Name": "Fuffi",
-            "Breed": "German Shepherd",
-            "Owner": "Claudio Sulas",
-            "Age": 5,
-            "Sex": 0,
-            "Size": 63,
-            "Weight": 37,
-            "CoatType": "Medium",
-            "Allergies": [
-                "Pollen"
-            ]
         }
     ],
     "Stores": [

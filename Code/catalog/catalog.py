@@ -111,7 +111,6 @@ class Catalog:
             )
         raise cherrypy.HTTPError(401, "Invalid credentials")
 
-    # Aggiungere metodo per gestire le prenotazioni dei kennel
     def book_kennel(self, body):
         loc = body["location"]
         kennel = body["kennel"]
@@ -128,6 +127,10 @@ class Catalog:
             k = next((k for k in store["Kennels"] if k["ID"] == kennel), None)
             if k:
                 k["Booked"] = True
+                self.save_catalog()
+                return json.dumps({"status": "success", "message": "Kennel booked"})
+            raise cherrypy.HTTPError(404, "Kennel not found")
+        raise cherrypy.HTTPError(404, "Store not found")
 
     def lock_kennel(self, body):
         loc = body["location"]
@@ -143,6 +146,10 @@ class Catalog:
             )
             if kennel:
                 kennel["Occupied"] = True
+                self.save_catalog()
+                return json.dumps({"status": "success", "message": "Kennel locked"})
+            raise cherrypy.HTTPError(404, "Kennel not found")
+        raise cherrypy.HTTPError(404, "Store not found")
 
     def free_kennel(self, body):
         loc = body["location"]
@@ -159,6 +166,34 @@ class Catalog:
             if kennel:
                 kennel["Occupied"] = False
                 kennel["Booked"] = False
+                self.save_catalog()
+                return json.dumps({"status": "success", "message": "Kennel freed"})
+            raise cherrypy.HTTPError(404, "Kennel not found")
+        raise cherrypy.HTTPError(404, "Store not found")
+
+    def add_dog(self, userID, body):
+        dogID = str(uuid.uuid4())
+        user = next(
+            (u for u in self.catalog_data["Users"] if u["UserID"] == userID),
+            None,
+        )
+        if user:
+            body["DogID"] = dogID
+            user["Dogs"].append(body)
+            self.save_catalog()
+            return json.dumps({"status": "success", "message": "Dog added"})
+        raise cherrypy.HTTPError(404, "User not found")
+
+    def delete_dog(self, userID, dogID):
+        user = next(
+            (u for u in self.catalog_data["Users"] if u["UserID"] == userID),
+            None,
+        )
+        if user:
+            user["Dogs"] = [d for d in user["Dogs"] if d["DogID"] != dogID]
+            self.save_catalog()
+            return json.dumps({"status": "success", "message": "Dog deleted"})
+        raise cherrypy.HTTPError(404, "User not found")
 
     def GET(self, *uri, **params):
         auth_header = cherrypy.request.headers.get("Authorization")
@@ -176,8 +211,6 @@ class Catalog:
             return json.dumps(self.catalog_data["serviceList"])
         elif uri[0] == "stores":
             return json.dumps(self.catalog_data["Stores"])
-        elif uri[0] == "dogs":
-            return json.dumps(self.catalog_data["Dogs"])
         elif uri[0] == "breeds":
             return json.dumps(self.catalog_data["Breeds"])
         elif uri[0] == "users":
@@ -188,8 +221,6 @@ class Catalog:
                 )
                 return json.dumps(user)
             return json.dumps(self.catalog_data["Users"])
-        elif uri[0] == "stores":
-            return json.dumps(self.catalog_data["Stores"])
         else:
             raise cherrypy.HTTPError(404, "Resource not found")
 
@@ -215,17 +246,16 @@ class Catalog:
         elif uri[0] == "login":
             return self.login(json_body)
         elif uri[0] == "book":
-            self.book_kennel(json_body)
-            self.save_catalog()
-            return json.dumps({"status": "success", "message": "Kennel locked"})
+            return self.book_kennel(json_body)
         elif uri[0] == "lock":
-            self.lock_kennel(json_body)
-            self.save_catalog()
-            return json.dumps({"status": "success", "message": "Kennel locked"})
+            return self.lock_kennel(json_body)
         elif uri[0] == "free":
-            self.free_kennel(json_body)
-            self.save_catalog()
-            return json.dumps({"status": "success", "message": "Kennel freed"})
+            return self.free_kennel(json_body)
+        elif uri[0] == "dogs":
+            if len(uri) == 1:
+                raise cherrypy.HTTPError(400, "Bad request, add userID")
+            userID = uri[1]
+            return self.add_dog(userID, json_body)
         elif uri[0] == "devices":
             self.catalog_data["Devices"].append(json_body)
             self.save_catalog()
@@ -258,7 +288,12 @@ class Catalog:
         return "200 OK"
 
     def DELETE(self, *uri, **params):
-        if uri[0] == "devices" and len(uri) > 1:
+        if uri[0] == "dogs":
+            # DEL request at IP:8080/dogs/userID/dogID
+            if len(uri) < 3:
+                raise cherrypy.HTTPError(400, "Bad request, use both userID and dogID")
+            return self.delete_dog(uri[1], uri[2])
+        elif uri[0] == "devices" and len(uri) > 1:
             device_id = uri[1]
             self.catalog_data["deviceList"] = [
                 d for d in self.catalog_data["deviceList"] if d["deviceID"] != device_id
