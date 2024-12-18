@@ -59,9 +59,7 @@ class ReservationManager:
         return None
 
     def handle_reservation(self, data):
-        dog_name = data.get("dog_name")
-        dog_breed = data.get("dog_breed")
-        dog_size = data.get("dog_size")
+        dogID = data.get("dogID")
         userID = data.get("userID")
         loc = data.get("location")
 
@@ -79,9 +77,7 @@ class ReservationManager:
                 {
                     "userID": userID,
                     "reservationID": reservationID,
-                    "dog_name": dog_name,
-                    "dog_breed": dog_breed,
-                    "dog_size": dog_size,
+                    "dogID": dogID,
                     "kennelID": kennelID,
                     "location": loc,
                     "timestamp": time.time(),
@@ -94,7 +90,7 @@ class ReservationManager:
                     "status": "confirmed",
                     "kennelID": kennelID,
                     "reservationID": reservationID,
-                    "message": f"Reservation confirmed for {dog_name} ({dog_breed})",
+                    "message": f"Reservation confirmed for dog {dogID})",
                 }
             )
         else:
@@ -119,7 +115,7 @@ class ReservationManager:
             return json.dumps(
                 {
                     "status": "cancelled",
-                    "message": f"Reservation for {reservation['dog_name']} in kennel {reservation['kennelID']} cancelled",
+                    "message": f"Reservation in kennel {reservation['kennelID']} cancelled",
                 }
             )
         else:
@@ -170,9 +166,6 @@ class ReservationManager:
             body = cherrypy.request.body.read()
             data = json.loads(body)
             return self.handle_reservation(data)
-        elif uri[0] == "cancel":
-            reservationID = uri[1]
-            return self.handle_cancellation(reservationID)
         else:
             raise cherrypy.HTTPError(404, "Endpoint not found")
 
@@ -191,6 +184,18 @@ class ReservationManager:
                 ]
                 return json.dumps(reservations)
             return json.dumps(self.reservations["reservation"])
+        else:
+            raise cherrypy.HTTPError(404, "Endpoint not found")
+
+    def DELETE(self, *uri):
+        auth_header = cherrypy.request.headers.get("Authorization")
+        if not auth_header:
+            raise cherrypy.HTTPError(401, "Authorization token required")
+        token = auth_header.split(" ")[1]
+        self.verify_token(token)
+        if uri[0] == "cancel":
+            reservationID = uri[1]
+            return self.handle_cancellation(reservationID)
         else:
             raise cherrypy.HTTPError(404, "Endpoint not found")
 
