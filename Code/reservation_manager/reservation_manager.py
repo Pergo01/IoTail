@@ -28,9 +28,7 @@ class ReservationManager:
             "Authorization": f"Bearer reservation_manager",
             "Content-Type": "application/json",
         }
-        response = requests.get(
-            f"http://host.docker.internal:8080/stores", headers=headers
-        )
+        response = requests.get(f"http://catalog:8080/stores", headers=headers)
         if response.ok:
             self.settings = response.json()
         else:
@@ -133,7 +131,7 @@ class ReservationManager:
         }
         body = json.dumps({"location": location, "kennel": kennel})
         response = requests.post(
-            f"http://host.docker.internal:8080/book",
+            f"http://catalog:8080/book",
             headers=headers,
             data=body,
         )
@@ -148,7 +146,7 @@ class ReservationManager:
         }
         body = json.dumps({"location": location, "kennel": kennel})
         response = requests.post(
-            f"http://host.docker.internal:8080/free",
+            f"http://catalog:8080/free",
             headers=headers,
             data=body,
         )

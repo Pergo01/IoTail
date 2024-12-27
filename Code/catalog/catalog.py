@@ -219,7 +219,9 @@ class Catalog:
                     (u for u in self.catalog_data["Users"] if u["UserID"] == uri[1]),
                     None,
                 )
-                return json.dumps(user)
+                return json.dumps(
+                    {key: val for key, val in user.items() if key != "Password"}
+                )
             return json.dumps(self.catalog_data["Users"])
         else:
             raise cherrypy.HTTPError(404, "Resource not found")
