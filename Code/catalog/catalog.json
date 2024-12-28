@@ -122,10 +122,7 @@
             "MeasureType": "Temperature",
             "MeasureUnit": "C",
             "Measurements": [],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -134,10 +131,7 @@
             "MeasureType": "Humidity",
             "MeasureUnit": "%",
             "Measurements": [],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -146,10 +140,7 @@
             "MeasureType": "Motion",
             "MeasureUnit": "Boolean",
             "Measurements": [],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -158,10 +149,7 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -170,10 +158,7 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -182,10 +167,7 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         }
     ],
@@ -205,9 +187,7 @@
                     "Size": 63,
                     "Weight": 37,
                     "CoatType": "Medium",
-                    "Allergies": [
-                        "Pollen"
-                    ]
+                    "Allergies": ["Pollen"]
                 }
             ]
         },
@@ -217,7 +197,19 @@
             "Email": "john.doe@gmail.com",
             "Password": "$2b$12$Bl5h/GhsMVEV5caFrJaiweINUpz2Ya9o3FHmSqS.C5XmrdrzsYxFa",
             "PhoneNumber": "+123456789",
-            "Dogs": []
+            "Dogs": [
+                {
+                    "Name": "Fuffi",
+                    "Breed": "German Shepherd",
+                    "Age": 5,
+                    "Sex": 0,
+                    "Size": 63,
+                    "Weight": 37,
+                    "CoatType": "Medium",
+                    "Allergies": ["Pollen"],
+                    "DogID": "bd0bd076-9837-41cb-8999-35e1913d3529"
+                }
+            ]
         },
         {
             "UserID": "e8adc250-6db5-4e8e-a7f2-f97cff6f233e",
@@ -231,15 +223,12 @@
     "Stores": [
         {
             "Name": "Carrefour",
-            "Location": [
-                123,
-                456
-            ],
+            "Location": [44.883758429257526, 7.30079374642839],
             "Kennels": [
                 {
                     "ID": 0,
                     "Size": "Small",
-                    "Booked": false,
+                    "Booked": true,
                     "Occupied": false
                 },
                 {
@@ -250,6 +239,198 @@
                 },
                 {
                     "ID": 2,
+                    "Size": "Medium",
+                    "Booked": false,
+                    "Occupied": false
+                }
+            ]
+        },
+        {
+            "Name": "Carrefour Market",
+            "Location": [44.877669620759924, 7.3322196731887335],
+            "Kennels": [
+                {
+                    "ID": 3,
+                    "Size": "Small",
+                    "Booked": true,
+                    "Occupied": false
+                },
+                {
+                    "ID": 4,
+                    "Size": "Large",
+                    "Booked": false,
+                    "Occupied": false
+                },
+                {
+                    "ID": 5,
+                    "Size": "Medium",
+                    "Booked": false,
+                    "Occupied": false
+                }
+            ]
+        },
+        {
+            "Name": "Unieuro",
+            "Location": [44.88356750938969, 7.301756733569461],
+            "Kennels": [
+                {
+                    "ID": 6,
+                    "Size": "Small",
+                    "Booked": true,
+                    "Occupied": false
+                },
+                {
+                    "ID": 7,
+                    "Size": "Large",
+                    "Booked": false,
+                    "Occupied": false
+                },
+                {
+                    "ID": 8,
+                    "Size": "Medium",
+                    "Booked": false,
+                    "Occupied": false
+                }
+            ]
+        },
+        {
+            "Name": "Expert Chiale",
+            "Location": [44.88557622795214, 7.305198035751105],
+            "Kennels": [
+                {
+                    "ID": 9,
+                    "Size": "Small",
+                    "Booked": true,
+                    "Occupied": false
+                },
+                {
+                    "ID": 10,
+                    "Size": "Large",
+                    "Booked": false,
+                    "Occupied": false
+                },
+                {
+                    "ID": 11,
+                    "Size": "Medium",
+                    "Booked": false,
+                    "Occupied": false
+                }
+            ]
+        },
+        {
+            "Name": "Eurospin",
+            "Location": [44.88203424085209, 7.3165326672042985],
+            "Kennels": [
+                {
+                    "ID": 12,
+                    "Size": "Small",
+                    "Booked": true,
+                    "Occupied": false
+                },
+                {
+                    "ID": 13,
+                    "Size": "Large",
+                    "Booked": false,
+                    "Occupied": false
+                },
+                {
+                    "ID": 14,
+                    "Size": "Medium",
+                    "Booked": false,
+                    "Occupied": false
+                }
+            ]
+        },
+        {
+            "Name": "Conad",
+            "Location": [44.88203424085209, 7.3165326672042985],
+            "Kennels": [
+                {
+                    "ID": 15,
+                    "Size": "Small",
+                    "Booked": true,
+                    "Occupied": false
+                },
+                {
+                    "ID": 16,
+                    "Size": "Large",
+                    "Booked": false,
+                    "Occupied": false
+                },
+                {
+                    "ID": 17,
+                    "Size": "Medium",
+                    "Booked": false,
+                    "Occupied": false
+                }
+            ]
+        },
+        {
+            "Name": "Carrefour Express",
+            "Location": [44.884895268972, 7.335235333805657],
+            "Kennels": [
+                {
+                    "ID": 18,
+                    "Size": "Small",
+                    "Booked": true,
+                    "Occupied": false
+                },
+                {
+                    "ID": 19,
+                    "Size": "Large",
+                    "Booked": false,
+                    "Occupied": false
+                },
+                {
+                    "ID": 20,
+                    "Size": "Medium",
+                    "Booked": false,
+                    "Occupied": false
+                }
+            ]
+        },
+        {
+            "Name": "Le Due Valli",
+            "Location": [44.88381014295781, 7.353193648817221],
+            "Kennels": [
+                {
+                    "ID": 21,
+                    "Size": "Small",
+                    "Booked": true,
+                    "Occupied": false
+                },
+                {
+                    "ID": 22,
+                    "Size": "Large",
+                    "Booked": false,
+                    "Occupied": false
+                },
+                {
+                    "ID": 23,
+                    "Size": "Medium",
+                    "Booked": false,
+                    "Occupied": false
+                }
+            ]
+        },
+        {
+            "Name": "Lidl",
+            "Location": [44.88887923373485, 7.354279972414157],
+            "Kennels": [
+                {
+                    "ID": 24,
+                    "Size": "Small",
+                    "Booked": true,
+                    "Occupied": false
+                },
+                {
+                    "ID": 25,
+                    "Size": "Large",
+                    "Booked": false,
+                    "Occupied": false
+                },
+                {
+                    "ID": 26,
                     "Size": "Medium",
                     "Booked": false,
                     "Occupied": false
