@@ -41,7 +41,7 @@ class Catalog:
 
     def load_catalog(self):
         try:
-            with open("catalog.json", "r") as f:
+            with open("catalog.json") as f:
                 return json.load(f)
         except FileNotFoundError:
             return {
@@ -208,6 +208,7 @@ class Catalog:
             raise cherrypy.HTTPError(401, "Authorization token required")
         token = auth_header.split(" ")[1]
         self.verify_token(token)  # Verify the token
+
         if len(uri) == 0:
             return json.dumps(self.catalog_data)
         elif uri[0] == "broker":
@@ -277,6 +278,12 @@ class Catalog:
             raise cherrypy.HTTPError(400, "Bad request")
 
     def PUT(self, *uri, **params):
+        auth_header = cherrypy.request.headers.get("Authorization")
+        if not auth_header:
+            raise cherrypy.HTTPError(401, "Authorization token required")
+        token = auth_header.split(" ")[1]
+        self.verify_token(token)  # Verify the token
+
         body = cherrypy.request.body.read()
         json_body = json.loads(body)
 
@@ -290,6 +297,27 @@ class Catalog:
                 if service["serviceID"] == json_body["serviceID"]:
                     self.catalog_data["serviceList"][i] = json_body
                     break
+        elif uri[0] == "users":
+            if len(uri) < 2:
+                raise cherrypy.HTTPError(400, "Bad request, use userID")
+            userID = uri[1]
+            for i, user in enumerate(self.catalog_data["Users"]):
+                if user["UserID"] == userID:
+                    self.catalog_data["Users"][i] = {
+                        "UserID": userID,
+                        "Name": json_body["name"],
+                        "Email": json_body["email"],
+                        "Password": json_body["password"],
+                        "PhoneNumber": json_body["phoneNumber"],
+                        "Dogs": json_body["dogs"],
+                    }
+                    self.save_catalog()
+                    return json.dumps(
+                        {
+                            "status": "success",
+                            "message": f"User {json_body['userID']} updated",
+                        }
+                    )
         else:
             raise cherrypy.HTTPError(400, "Bad request")
 
