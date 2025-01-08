@@ -111,6 +111,24 @@ class Catalog:
             )
         raise cherrypy.HTTPError(401, "Invalid credentials")
 
+    def edit_user(self, userID, body):
+        user = next(
+            (u for u in self.catalog_data["Users"] if u["UserID"] == userID),
+            None,
+        )
+        if user:
+            user["Name"] = body["name"]
+            user["Email"] = body["email"]
+            user["PhoneNumber"] = body["phoneNumber"]
+            self.save_catalog()
+            return json.dumps(
+                {
+                    "status": "success",
+                    "message": f"User {userID} updated",
+                }
+            )
+        raise cherrypy.HTTPError(404, "User not found")
+
     def book_kennel(self, body):
         loc = body["location"]
         kennel = body["kennel"]
@@ -301,23 +319,7 @@ class Catalog:
             if len(uri) < 2:
                 raise cherrypy.HTTPError(400, "Bad request, use userID")
             userID = uri[1]
-            for i, user in enumerate(self.catalog_data["Users"]):
-                if user["UserID"] == userID:
-                    self.catalog_data["Users"][i] = {
-                        "UserID": userID,
-                        "Name": json_body["name"],
-                        "Email": json_body["email"],
-                        "Password": json_body["password"],
-                        "PhoneNumber": json_body["phoneNumber"],
-                        "Dogs": json_body["dogs"],
-                    }
-                    self.save_catalog()
-                    return json.dumps(
-                        {
-                            "status": "success",
-                            "message": f"User {json_body['userID']} updated",
-                        }
-                    )
+            return self.edit_user(userID, json_body)
         else:
             raise cherrypy.HTTPError(400, "Bad request")
 
