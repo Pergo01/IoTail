@@ -181,7 +181,9 @@ class Catalog:
             body["DogID"] = dogID
             user["Dogs"].append(body)
             self.save_catalog()
-            return json.dumps({"status": "success", "message": "Dog added"})
+            return json.dumps(
+                {"status": "success", "message": f"Dog added to user {userID}"}
+            )
         raise cherrypy.HTTPError(404, "User not found")
 
     def delete_dog(self, userID, dogID):
@@ -192,7 +194,12 @@ class Catalog:
         if user:
             user["Dogs"] = [d for d in user["Dogs"] if d["DogID"] != dogID]
             self.save_catalog()
-            return json.dumps({"status": "success", "message": "Dog deleted"})
+            return json.dumps(
+                {
+                    "status": "success",
+                    "message": f"Dog {dogID} deleted for user {userID}",
+                }
+            )
         raise cherrypy.HTTPError(404, "User not found")
 
     def GET(self, *uri, **params):
@@ -295,6 +302,18 @@ class Catalog:
             if len(uri) < 3:
                 raise cherrypy.HTTPError(400, "Bad request, use both userID and dogID")
             return self.delete_dog(uri[1], uri[2])
+        elif uri[0] == "users":
+            # DEL request at IP:8080/users/userID
+            if len(uri) < 2:
+                raise cherrypy.HTTPError(400, "Bad request, use userID")
+            user_id = uri[1]
+            self.catalog_data["Users"] = [
+                u for u in self.catalog_data["Users"] if u["UserID"] != user_id
+            ]
+            self.save_catalog()
+            return json.dumps(
+                {"status": "success", "message": f"User {uri[1]} deleted"}
+            )
         elif uri[0] == "devices" and len(uri) > 1:
             device_id = uri[1]
             self.catalog_data["deviceList"] = [
