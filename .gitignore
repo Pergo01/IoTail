@@ -9,6 +9,7 @@ Code/camera/__pycache__/*
 Code/camera/mqtt_settings.json
 Code/secret_key.txt
 Code/catalog/secret_key.txt
+Code/catalog/.env
 Code/reservation_manager/secret_key.txt
 
 !Code/node-red-data/node-red-flow.json

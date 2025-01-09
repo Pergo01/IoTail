@@ -7,6 +7,10 @@ import bcrypt
 import uuid
 import jwt
 import datetime
+from dotenv import load_dotenv
+import secrets
+import string
+import requests
 
 
 class Catalog:
@@ -16,6 +20,8 @@ class Catalog:
         self.catalog_data = self.load_catalog()
         with open("secret_key.txt") as f:
             self.secret_key = f.read()
+        load_dotenv()  # for reading API key from `.env` file.
+        self.recover_codes = []
 
     def generate_token(self, user_id, role):
         expiration_time = datetime.datetime.now(
@@ -110,6 +116,90 @@ class Catalog:
                 }
             )
         raise cherrypy.HTTPError(401, "Invalid credentials")
+
+    @staticmethod
+    def generate_secure_code(length=8):
+        characters = string.ascii_letters + string.digits
+        return "".join(secrets.choice(characters) for _ in range(length))
+
+    def recover_password(self, body):
+        user = next(
+            (u for u in self.catalog_data["Users"] if u["Email"] == body["email"]),
+            None,
+        )
+        if user:
+            secure_code = self.generate_secure_code()
+            api_key = os.getenv("MAILGUN_API_KEY")  # Read the API key from .env file
+            api_url = os.getenv("MAILGUN_API_URL")  # Read the API URL from .env file
+            from_address = os.getenv(
+                "FROM_EMAIL_ADDRESS"
+            )  # Read the sender email from .env file
+            response = requests.post(
+                api_url,
+                auth=("api", api_key),
+                data={
+                    "from": from_address,
+                    "to": user["Email"],
+                    "subject": "IoTail password recovery",
+                    "text": f"Dear user,\nuse this code to recover your password: {secure_code}",
+                },
+            )
+            if response.status_code == 200:
+                self.recover_codes.append({"email": user["Email"], "code": secure_code})
+                return json.dumps(
+                    {
+                        "status": "success",
+                        "message": "Password recovery email sent",
+                    }
+                )
+            raise cherrypy.HTTPError(500, "Error sending recovery email")
+        raise cherrypy.HTTPError(404, "User not found")
+
+    def verify_recover_code(self, email, code):
+        for i, entry in enumerate(self.recover_codes):
+            if entry["email"] == email and entry["code"] == code:
+                del self.recover_codes[i]
+                return True
+        return False
+
+    def reset_password(self, body):
+        email = body["email"]
+        recovery_code = body["recovery_code"]
+        password = body["password"]
+
+        if not self.verify_recover_code(email, recovery_code):
+            raise cherrypy.HTTPError(401, "Invalid recovery code")
+        user = next(
+            (u for u in self.catalog_data["Users"] if u["Email"] == email),
+            None,
+        )
+        if user:
+            user["Password"] = bcrypt.hashpw(
+                password.encode("utf-8"), bcrypt.gensalt()
+            ).decode("utf-8")
+            self.save_catalog()
+            api_key = os.getenv("MAILGUN_API_KEY")  # Read the API key from .env file
+            api_url = os.getenv("MAILGUN_API_URL")  # Read the API URL from .env file
+            from_address = os.getenv(
+                "FROM_EMAIL_ADDRESS"
+            )  # Read the sender email from .env file
+            requests.post(
+                api_url,
+                auth=("api", api_key),
+                data={
+                    "from": from_address,
+                    "to": user["Email"],
+                    "subject": "IoTail password reset successful",
+                    "text": f"Dear user,\nyour password has been successfully reset",
+                },
+            )
+            return json.dumps(
+                {
+                    "status": "success",
+                    "message": "Password reset successfully",
+                }
+            )
+        raise cherrypy.HTTPError(404, "User not found")
 
     def edit_user(self, userID, body):
         user = next(
@@ -254,7 +344,7 @@ class Catalog:
 
     def POST(self, *uri, **params):
         # Routes that do not require authentication
-        public_routes = ["register", "login"]
+        public_routes = ["register", "login", "recover"]
 
         # Check if the route is public
         if uri[0] not in public_routes:
@@ -284,6 +374,8 @@ class Catalog:
                 raise cherrypy.HTTPError(400, "Bad request, add userID")
             userID = uri[1]
             return self.add_dog(userID, json_body)
+        elif uri[0] == "recover":
+            return self.recover_password(json_body)
         elif uri[0] == "devices":
             self.catalog_data["Devices"].append(json_body)
             self.save_catalog()
@@ -296,11 +388,17 @@ class Catalog:
             raise cherrypy.HTTPError(400, "Bad request")
 
     def PUT(self, *uri, **params):
-        auth_header = cherrypy.request.headers.get("Authorization")
-        if not auth_header:
-            raise cherrypy.HTTPError(401, "Authorization token required")
-        token = auth_header.split(" ")[1]
-        self.verify_token(token)  # Verify the token
+        # Routes that do not require authentication
+        public_routes = ["reset_password"]
+
+        # Check if the route is public
+        if uri[0] not in public_routes:
+            # Enforce authentication for all other POST routes
+            auth_header = cherrypy.request.headers.get("Authorization")
+            if not auth_header:
+                raise cherrypy.HTTPError(401, "Authorization token required")
+            token = auth_header.split(" ")[1]
+            self.verify_token(token)  # Verify the token
 
         body = cherrypy.request.body.read()
         json_body = json.loads(body)
@@ -320,6 +418,8 @@ class Catalog:
                 raise cherrypy.HTTPError(400, "Bad request, use userID")
             userID = uri[1]
             return self.edit_user(userID, json_body)
+        elif uri[0] == "reset_password":
+            return self.reset_password(json_body)
         else:
             raise cherrypy.HTTPError(400, "Bad request")
 
