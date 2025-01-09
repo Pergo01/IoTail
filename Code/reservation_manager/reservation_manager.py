@@ -49,23 +49,38 @@ class ReservationManager:
         with open(self.reservation_file, "w") as f:
             json.dump(self.reservations, f, indent=4)
 
-    def find_available_kennel(self, store):
-        # TODO sort kennel by dimension to fit the dog in the smallest possible kennel in which the dog can fit
-        for kennel in store["Kennels"]:
-            if not kennel["Booked"] and not kennel["Occupied"]:
+    def find_available_kennel(self, store, dog_size):
+        # Define the order for kennel dimensions
+        dimension_order = {"Small": 0, "Medium": 1, "Large": 2}
+
+        # Sort kennels by dimension size
+        sorted_kennels = sorted(
+            store["Kennels"], key=lambda x: dimension_order[x["Size"]]
+        )
+
+        # Find the smallest available kennel that fits the dog
+        for kennel in sorted_kennels:
+            if (
+                not kennel["Booked"]
+                and not kennel["Occupied"]
+                and dimension_order[kennel["Size"]] >= dimension_order[dog_size]
+            ):
                 return kennel["ID"]
+
+        # Return None if no suitable kennel is found
         return None
 
     def handle_reservation(self, data):
         dogID = data.get("dogID")
         userID = data.get("userID")
         loc = data.get("location")
+        dog_size = data.get("dog_size")
 
         store = next(
             (s for s in self.settings if s["Location"] == loc),
             None,
         )
-        kennelID = self.find_available_kennel(store)
+        kennelID = self.find_available_kennel(store, dog_size)
         if kennelID is not None:
             reservationID = str(
                 uuid.uuid4()
@@ -91,10 +106,7 @@ class ReservationManager:
                     "message": f"Reservation confirmed for dog {dogID})",
                 }
             )
-        else:
-            return json.dumps(
-                {"status": "unavailable", "message": "No kennels available"}
-            )
+        return json.dumps({"status": "unavailable", "message": "No kennels available"})
 
     def handle_cancellation(self, reservationID):
         reservation = next(

@@ -184,7 +184,7 @@
                     "Breed": "German Shepherd",
                     "Age": 5,
                     "Sex": 0,
-                    "Size": 63,
+                    "Size": "Large",
                     "Weight": 37,
                     "CoatType": "Medium",
                     "Allergies": ["Pollen"]
@@ -203,7 +203,7 @@
                     "Breed": "German Shepherd",
                     "Age": 5,
                     "Sex": 0,
-                    "Size": 63,
+                    "Size": "Large",
                     "Weight": 37,
                     "CoatType": "Medium",
                     "Allergies": ["Pollen"],
@@ -228,7 +228,7 @@
                 {
                     "ID": 0,
                     "Size": "Small",
-                    "Booked": true,
+                    "Booked": false,
                     "Occupied": false
                 },
                 {
