@@ -119,6 +119,21 @@ class Catalog:
         self.save_catalog()
         role = body.get("role", "Client")  # Default role is "client"
         token = self.generate_token(userID, role)
+        api_key = os.getenv("MAILGUN_API_KEY")  # Read the API key from .env file
+        api_url = os.getenv("MAILGUN_API_URL")  # Read the API URL from .env file
+        from_address = os.getenv(
+            "FROM_EMAIL_ADDRESS"
+        )  # Read the sender email from .env file
+        requests.post(
+            api_url,
+            auth=("api", api_key),
+            data={
+                "from": from_address,
+                "to": email,
+                "subject": "Welcome to IoTail",
+                "text": f"Dear user,\nwe welcome you to IoTail. Enjoy our services!",
+            },
+        )
         return json.dumps(
             {
                 "status": "success",
