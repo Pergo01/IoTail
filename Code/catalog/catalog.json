@@ -240,14 +240,6 @@
             "Password": "$2b$12$GlMI6I6iHYN64oMTHc9HoOArXdDU8bBAcNZ.Zl6JSyWFYlWWOO/fC",
             "PhoneNumber": "+987654321",
             "Dogs": []
-        },
-        {
-            "UserID": "3814d9ce-fb75-4998-9e6d-571cd0e7705e",
-            "Name": "Pippo Franco",
-            "Email": "alessandropergolizzi01@gmail.com",
-            "Password": "$2b$12$3JmSa00dXBpXnEpNncIrS.yl2V5wYemtwuK1srm4vTja6Hbg5j9QO",
-            "PhoneNumber": "+987654321",
-            "Dogs": []
         }
     ],
     "Stores": [

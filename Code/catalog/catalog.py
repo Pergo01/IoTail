@@ -21,7 +21,7 @@ class Catalog:
         with open("secret_key.txt") as f:
             self.secret_key = f.read()
         load_dotenv()  # for reading API key from `.env` file.
-        self.recover_codes = []
+        self.codes = []
 
     def generate_token(self, user_id, role):
         expiration_time = datetime.datetime.now(
@@ -67,10 +67,41 @@ class Catalog:
         except IOError as e:
             print(f"Error saving catalog: {e}")
 
-    def register(self, body):
+    def register(self, email):
         email_list = [user["Email"] for user in self.catalog_data["Users"]]
-        if body["email"] in email_list:
+        if email in email_list:
             raise cherrypy.HTTPError(400, "Email already exists")
+        secure_code = self.generate_secure_code()
+        api_key = os.getenv("MAILGUN_API_KEY")  # Read the API key from .env file
+        api_url = os.getenv("MAILGUN_API_URL")  # Read the API URL from .env file
+        from_address = os.getenv(
+            "FROM_EMAIL_ADDRESS"
+        )  # Read the sender email from .env file
+        response = requests.post(
+            api_url,
+            auth=("api", api_key),
+            data={
+                "from": from_address,
+                "to": email,
+                "subject": "IoTail registration code",
+                "text": f"Dear user,\nuse this code to confirm your registration: {secure_code}",
+            },
+        )
+        if response.status_code == 200:
+            self.codes.append({"email": email, "code": secure_code})
+            return json.dumps(
+                {
+                    "status": "success",
+                    "message": "Confirm registration email sent",
+                }
+            )
+        raise cherrypy.HTTPError(500, "Error sending confirm registration email")
+
+    def confirm_registration(self, body):
+        email = body["email"]
+        registration_code = body["registration_code"]
+        if not self.verify_code(email, registration_code):
+            raise cherrypy.HTTPError(401, "Invalid registration code")
         hashed_password = bcrypt.hashpw(
             body["password"].encode("utf-8"), bcrypt.gensalt()
         ).decode("utf-8")
@@ -79,7 +110,7 @@ class Catalog:
             {
                 "UserID": userID,
                 "Name": body["name"],
-                "Email": body["email"],
+                "Email": email,
                 "Password": hashed_password,
                 "PhoneNumber": body["phone"],
                 "Dogs": [],
@@ -91,7 +122,7 @@ class Catalog:
         return json.dumps(
             {
                 "status": "success",
-                "message": f"User {body['email']} successfully registered",
+                "message": f"User {email} successfully registered",
                 "token": token,
                 "userID": userID,
             }
@@ -145,7 +176,7 @@ class Catalog:
                 },
             )
             if response.status_code == 200:
-                self.recover_codes.append({"email": user["Email"], "code": secure_code})
+                self.codes.append({"email": user["Email"], "code": secure_code})
                 return json.dumps(
                     {
                         "status": "success",
@@ -155,10 +186,10 @@ class Catalog:
             raise cherrypy.HTTPError(500, "Error sending recovery email")
         raise cherrypy.HTTPError(404, "User not found")
 
-    def verify_recover_code(self, email, code):
-        for i, entry in enumerate(self.recover_codes):
+    def verify_code(self, email, code):
+        for i, entry in enumerate(self.codes):
             if entry["email"] == email and entry["code"] == code:
-                del self.recover_codes[i]
+                del self.codes[i]
                 return True
         return False
 
@@ -167,7 +198,7 @@ class Catalog:
         recovery_code = body["recovery_code"]
         password = body["password"]
 
-        if not self.verify_recover_code(email, recovery_code):
+        if not self.verify_code(email, recovery_code):
             raise cherrypy.HTTPError(401, "Invalid recovery code")
         user = next(
             (u for u in self.catalog_data["Users"] if u["Email"] == email),
@@ -344,7 +375,7 @@ class Catalog:
 
     def POST(self, *uri, **params):
         # Routes that do not require authentication
-        public_routes = ["register", "login", "recover"]
+        public_routes = ["register", "login", "recover", "confirm_registration"]
 
         # Check if the route is public
         if uri[0] not in public_routes:
@@ -360,7 +391,9 @@ class Catalog:
         json_body = json.loads(body)
 
         if uri[0] == "register":
-            return self.register(json_body)
+            return self.register(json_body["email"])
+        elif uri[0] == "confirm_registration":
+            return self.confirm_registration(json_body)
         elif uri[0] == "login":
             return self.login(json_body)
         elif uri[0] == "book":
