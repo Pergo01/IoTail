@@ -113,6 +113,7 @@ class Catalog:
                 "Email": email,
                 "Password": hashed_password,
                 "PhoneNumber": body["phone"],
+                "ProfilePicture": None,
                 "Dogs": [],
             }
         )
@@ -256,6 +257,7 @@ class Catalog:
             user["Name"] = body["name"]
             user["Email"] = body["email"]
             user["PhoneNumber"] = body["phoneNumber"]
+            user["ProfilePicture"] = body["profilePicture"]
             self.save_catalog()
             return json.dumps(
                 {

@@ -122,10 +122,7 @@
             "MeasureType": "Temperature",
             "MeasureUnit": "C",
             "Measurements": [],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -134,10 +131,7 @@
             "MeasureType": "Humidity",
             "MeasureUnit": "%",
             "Measurements": [],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -146,10 +140,7 @@
             "MeasureType": "Motion",
             "MeasureUnit": "Boolean",
             "Measurements": [],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -158,10 +149,7 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -170,10 +158,7 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         },
         {
@@ -182,10 +167,7 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "Availability": true
         }
     ],
@@ -195,6 +177,7 @@
             "Name": "Claudio Sulas",
             "Email": "claudiosulas@example.com",
             "PhoneNumber": "+1234567890",
+            "ProfilePicture": null,
             "Dogs": [
                 {
                     "DogID": "oafjfahiuafduj12oieqo0310445",
@@ -205,9 +188,7 @@
                     "Size": "Large",
                     "Weight": 37,
                     "CoatType": "Medium",
-                    "Allergies": [
-                        "Pollen"
-                    ]
+                    "Allergies": ["Pollen"]
                 }
             ]
         },
@@ -217,6 +198,7 @@
             "Email": "john.doe@gmail.com",
             "Password": "$2b$12$Bl5h/GhsMVEV5caFrJaiweINUpz2Ya9o3FHmSqS.C5XmrdrzsYxFa",
             "PhoneNumber": "+123456789",
+            "ProfilePicture": null,
             "Dogs": [
                 {
                     "Name": "Fuffi",
@@ -226,9 +208,7 @@
                     "Size": "Large",
                     "Weight": 37,
                     "CoatType": "Medium",
-                    "Allergies": [
-                        "Pollen"
-                    ],
+                    "Allergies": ["Pollen"],
                     "DogID": "bd0bd076-9837-41cb-8999-35e1913d3529"
                 }
             ]
@@ -239,16 +219,14 @@
             "Email": "johanna.doe@gmail.com",
             "Password": "$2b$12$GlMI6I6iHYN64oMTHc9HoOArXdDU8bBAcNZ.Zl6JSyWFYlWWOO/fC",
             "PhoneNumber": "+987654321",
+            "ProfilePicture": null,
             "Dogs": []
         }
     ],
     "Stores": [
         {
             "Name": "Carrefour",
-            "Location": [
-                44.8837,
-                7.3007
-            ],
+            "Location": [44.8837, 7.3007],
             "Kennels": [
                 {
                     "ID": 0,
@@ -272,10 +250,7 @@
         },
         {
             "Name": "Carrefour Market",
-            "Location": [
-                44.8776,
-                7.3322
-            ],
+            "Location": [44.8776, 7.3322],
             "Kennels": [
                 {
                     "ID": 3,
@@ -299,10 +274,7 @@
         },
         {
             "Name": "Unieuro",
-            "Location": [
-                44.8835,
-                7.3017
-            ],
+            "Location": [44.8835, 7.3017],
             "Kennels": [
                 {
                     "ID": 6,
@@ -326,10 +298,7 @@
         },
         {
             "Name": "Expert Chiale",
-            "Location": [
-                44.8855,
-                7.3051
-            ],
+            "Location": [44.8855, 7.3051],
             "Kennels": [
                 {
                     "ID": 9,
@@ -353,10 +322,7 @@
         },
         {
             "Name": "Eurospin",
-            "Location": [
-                44.882,
-                7.3165
-            ],
+            "Location": [44.882, 7.3165],
             "Kennels": [
                 {
                     "ID": 12,
@@ -380,10 +346,7 @@
         },
         {
             "Name": "Conad",
-            "Location": [
-                44.8864,
-                7.3385
-            ],
+            "Location": [44.8864, 7.3385],
             "Kennels": [
                 {
                     "ID": 15,
@@ -407,10 +370,7 @@
         },
         {
             "Name": "Carrefour Express",
-            "Location": [
-                44.8848,
-                7.3352
-            ],
+            "Location": [44.8848, 7.3352],
             "Kennels": [
                 {
                     "ID": 18,
@@ -434,10 +394,7 @@
         },
         {
             "Name": "Le Due Valli",
-            "Location": [
-                44.8838,
-                7.3531
-            ],
+            "Location": [44.8838, 7.3531],
             "Kennels": [
                 {
                     "ID": 21,
@@ -461,10 +418,7 @@
         },
         {
             "Name": "Lidl",
-            "Location": [
-                44.8888,
-                7.3542
-            ],
+            "Location": [44.8888, 7.3542],
             "Kennels": [
                 {
                     "ID": 24,
