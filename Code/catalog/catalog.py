@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 import secrets
 import string
 import requests
+import shutil
+from cherrypy.lib import static
 
 
 class Catalog:
@@ -248,24 +250,40 @@ class Catalog:
             )
         raise cherrypy.HTTPError(404, "User not found")
 
-    def edit_user(self, userID, body):
+    def edit_user(self, userID, body, file):
+        # Find the user by ID
         user = next(
             (u for u in self.catalog_data["Users"] if u["UserID"] == userID),
             None,
         )
-        if user:
-            user["Name"] = body["name"]
-            user["Email"] = body["email"]
-            user["PhoneNumber"] = body["phoneNumber"]
-            user["ProfilePicture"] = body["profilePicture"]
-            self.save_catalog()
-            return json.dumps(
-                {
-                    "status": "success",
-                    "message": f"User {userID} updated",
-                }
-            )
-        raise cherrypy.HTTPError(404, "User not found")
+        if not user:
+            raise cherrypy.HTTPError(404, "User not found")
+
+        # Update user details from the JSON body
+        user["Name"] = body["name"]
+        user["Email"] = body["email"]
+        user["PhoneNumber"] = body["phoneNumber"]
+
+        # Handle profile picture file
+        if file:
+            profile_pictures_dir = "profile_pictures"
+            os.makedirs(
+                profile_pictures_dir, exist_ok=True
+            )  # Ensure the directory exists
+            file_path = os.path.join(profile_pictures_dir, f"{userID}_profile.jpg")
+            with open(file_path, "wb") as f:
+                shutil.copyfileobj(file, f)
+            user["ProfilePicture"] = file_path  # Save the relative path
+
+        # Save updated catalog
+        self.save_catalog()
+
+        return json.dumps(
+            {
+                "status": "success",
+                "message": f"User {userID} updated",
+            }
+        )
 
     def book_kennel(self, body):
         loc = body["location"]
@@ -383,10 +401,30 @@ class Catalog:
                     (u for u in self.catalog_data["Users"] if u["UserID"] == uri[1]),
                     None,
                 )
+                if not user:
+                    raise cherrypy.HTTPError(404, "User not found")
+
                 return json.dumps(
                     {key: val for key, val in user.items() if key != "Password"}
                 )
             return json.dumps(self.catalog_data["Users"])
+        elif uri[0] == "profile_picture":
+            if len(uri) < 2:
+                raise cherrypy.HTTPError(400, "Bad request, add userID")
+            user = next(
+                (u for u in self.catalog_data["Users"] if u["UserID"] == uri[1]),
+                None,
+            )
+            if not user:
+                raise cherrypy.HTTPError(404, "User not found")
+            if not user["ProfilePicture"]:
+                return None
+            return static.serve_file(
+                "/app/" + user["ProfilePicture"],
+                content_type="image/jpg",
+                disposition="attachment",
+                name=user["ProfilePicture"].split("/")[-1],
+            )
         else:
             raise cherrypy.HTTPError(404, "Resource not found")
 
@@ -434,6 +472,7 @@ class Catalog:
             self.catalog_data["serviceList"].append(json_body)
             self.save_catalog()
             return json.dumps({"status": "success", "message": "Service added"})
+
         else:
             raise cherrypy.HTTPError(400, "Bad request")
 
@@ -450,8 +489,11 @@ class Catalog:
             token = auth_header.split(" ")[1]
             self.verify_token(token)  # Verify the token
 
-        body = cherrypy.request.body.read()
-        json_body = json.loads(body)
+        if cherrypy.request.headers.get("Content-Type", "").startswith(
+            "application/json"
+        ):
+            body = cherrypy.request.body.read()
+            json_body = json.loads(body)
 
         if uri[0] == "devices":
             for i, device in enumerate(self.catalog_data["deviceList"]):
@@ -465,9 +507,40 @@ class Catalog:
                     break
         elif uri[0] == "users":
             if len(uri) < 2:
-                raise cherrypy.HTTPError(400, "Bad request, use userID")
+                raise cherrypy.HTTPError(400, "UserID is required")
+
             userID = uri[1]
-            return self.edit_user(userID, json_body)
+
+            # Check for multipart data
+            if cherrypy.request.headers.get("Content-Type", "").startswith(
+                "multipart/form-data"
+            ):
+                fields = cherrypy.request.body.params
+                user_data_field = fields.get("userData")
+                profile_picture_field = fields.get("profilePicture")
+
+                if not user_data_field:
+                    raise cherrypy.HTTPError(400, "userData is required")
+
+                user_data = json.loads(user_data_field)
+
+                profile_picture = None
+                if profile_picture_field:
+                    profile_picture = profile_picture_field.file
+
+                # Call edit_user with or without profile picture
+                return self.edit_user(userID, user_data, profile_picture)
+            elif cherrypy.request.headers.get("Content-Type", "").startswith(
+                "application/json"
+            ):
+                # Handle JSON-only request for user data updates
+                body = cherrypy.request.body.read()
+                user_data = json.loads(body)
+                return self.edit_user(userID, user_data, None)
+            else:
+                raise cherrypy.HTTPError(
+                    400, "Expected multipart/form-data or application/json request"
+                )
         elif uri[0] == "reset_password":
             return self.reset_password(json_body)
         else:
@@ -487,12 +560,40 @@ class Catalog:
             if len(uri) < 2:
                 raise cherrypy.HTTPError(400, "Bad request, use userID")
             user_id = uri[1]
-            self.catalog_data["Users"] = [
-                u for u in self.catalog_data["Users"] if u["UserID"] != user_id
-            ]
-            self.save_catalog()
+            user = next(
+                user for user in self.catalog_data["Users"] if user["UserID"] == user_id
+            )
+            if user:
+                if user["ProfilePicture"]:
+                    os.remove(user["ProfilePicture"])
+                self.catalog_data["Users"] = [
+                    u for u in self.catalog_data["Users"] if u["UserID"] != user_id
+                ]
+                self.save_catalog()
+                return json.dumps(
+                    {"status": "success", "message": f"User {uri[1]} deleted"}
+                )
             return json.dumps(
-                {"status": "success", "message": f"User {uri[1]} deleted"}
+                {"status": "error", "message": f"User {uri[1]} not found"}
+            )
+        elif uri[0] == "profile_picture":
+            # DEL request at IP:8080/profile_picture/userID
+            if len(uri) < 2:
+                raise cherrypy.HTTPError(400, "Bad request, use userID")
+            user_id = uri[1]
+            user = next(
+                user for user in self.catalog_data["Users"] if user["UserID"] == user_id
+            )
+            if user:
+                if user["ProfilePicture"]:
+                    os.remove(user["ProfilePicture"])
+                user["ProfilePicture"] = None
+                self.save_catalog()
+                return json.dumps(
+                    {"status": "success", "message": "Profile picture deleted"}
+                )
+            return json.dumps(
+                {"status": "error", "message": f"User {uri[1]} not found"}
             )
         elif uri[0] == "devices" and len(uri) > 1:
             device_id = uri[1]

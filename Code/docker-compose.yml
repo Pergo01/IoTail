@@ -9,6 +9,7 @@ services:
       - ./settings.json:/app/settings.json
       - ./catalog/catalog.json:/app/catalog.json
       - ./secret_key.txt:/app/secret_key.txt
+      - ./catalog/profile_pictures:/app/profile_pictures
     depends_on:
       - mosquitto
     restart: always
