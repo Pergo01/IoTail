@@ -146,6 +146,18 @@ class Catalog:
             }
         )
 
+    @staticmethod
+    def generate_secure_code(length=8):
+        characters = string.ascii_letters + string.digits
+        return "".join(secrets.choice(characters) for _ in range(length))
+
+    def verify_code(self, email, code):
+        for i, entry in enumerate(self.codes):
+            if entry["email"] == email and entry["code"] == code:
+                del self.codes[i]
+                return True
+        return False
+
     def login(self, body):
         user = next(
             (u for u in self.catalog_data["Users"] if u["Email"] == body["email"]),
@@ -165,11 +177,6 @@ class Catalog:
                 }
             )
         raise cherrypy.HTTPError(401, "Invalid credentials")
-
-    @staticmethod
-    def generate_secure_code(length=8):
-        characters = string.ascii_letters + string.digits
-        return "".join(secrets.choice(characters) for _ in range(length))
 
     def recover_password(self, body):
         user = next(
@@ -203,13 +210,6 @@ class Catalog:
                 )
             raise cherrypy.HTTPError(500, "Error sending recovery email")
         raise cherrypy.HTTPError(404, "User not found")
-
-    def verify_code(self, email, code):
-        for i, entry in enumerate(self.codes):
-            if entry["email"] == email and entry["code"] == code:
-                del self.codes[i]
-                return True
-        return False
 
     def reset_password(self, body):
         email = body["email"]
@@ -285,6 +285,101 @@ class Catalog:
             }
         )
 
+    def add_dog(self, userID, body, picture):
+        dogID = str(uuid.uuid4())
+        user = next(
+            (u for u in self.catalog_data["Users"] if u["UserID"] == userID),
+            None,
+        )
+        if not user:
+            raise cherrypy.HTTPError(404, "User not found")
+        names = [d["Name"] for d in user["Dogs"]]
+        if body["name"] in names:
+            raise cherrypy.HTTPError(
+                400, f"Dog with name {body['name']} already exists for user {userID}"
+            )
+        body = {
+            key[0].upper() + key[1:]: val for key, val in body.items()
+        }  # Capitalize only first letter of the key without touching the others
+        body["DogID"] = dogID
+        if picture:
+            dog_pictures_dir = "dog_pictures"
+            os.makedirs(dog_pictures_dir, exist_ok=True)  # Ensure the directory exists
+            file_path = os.path.join(dog_pictures_dir, f"{userID}_{dogID}_dog.jpg")
+            with open(file_path, "wb") as f:
+                shutil.copyfileobj(picture, f)
+            body["Picture"] = file_path  # Save the relative path
+        user["Dogs"].append(body)
+        self.save_catalog()
+        return json.dumps(
+            {"status": "success", "message": f"Dog added to user {userID}"}
+        )
+
+    def edit_dog(self, userID, dogID, body, file):
+        # Find the user by ID
+        user = next(
+            (u for u in self.catalog_data["Users"] if u["UserID"] == userID),
+            None,
+        )
+        if not user:
+            raise cherrypy.HTTPError(404, "User not found")
+
+        dog = dog = next(
+            (d for d in user["Dogs"] if d["DogID"] == dogID),
+            None,
+        )
+
+        # Update user details from the JSON body
+        dog["Name"] = body["name"]
+        dog["Breed"] = body["breed"]
+        dog["Age"] = body["age"]
+        dog["Sex"] = body["sex"]
+        dog["Size"] = body["size"]
+        dog["Weight"] = body["weight"]
+        dog["CoatType"] = body["coatType"]
+        dog["Allergies"] = body["allergies"]
+
+        # Handle profile picture file
+        if file:
+            dog_pictures_dir = "dog_pictures"
+            os.makedirs(dog_pictures_dir, exist_ok=True)  # Ensure the directory exists
+            file_path = os.path.join(dog_pictures_dir, f"{userID}_{dogID}_dog.jpg")
+            with open(file_path, "wb") as f:
+                shutil.copyfileobj(file, f)
+            dog["Picture"] = file_path  # Save the relative path
+
+        # Save updated catalog
+        self.save_catalog()
+
+        return json.dumps(
+            {
+                "status": "success",
+                "message": f"Dog {dogID} of user {userID} updated",
+            }
+        )
+
+    def delete_dog(self, userID, dogID):
+        user = next(
+            user for user in self.catalog_data["Users"] if user["UserID"] == userID
+        )
+        if not user:
+            return json.dumps(
+                {"status": "error", "message": f"User {userID} not found"}
+            )
+        dog = next(
+            (d for d in user["Dogs"] if d["DogID"] == dogID),
+            None,
+        )
+        if not dog:
+            raise cherrypy.HTTPError(404, "Dog not found")
+        if dog["Picture"]:
+            os.remove(dog["Picture"])
+        user["Dogs"] = [d for d in user["Dogs"] if d["DogID"] != dogID]
+        self.save_catalog()
+        return json.dumps(
+            {"status": "success", "message": f"Dog {dogID} of User {userID} deleted"}
+        )
+
     def book_kennel(self, body):
         loc = body["location"]
         kennel = body["kennel"]
@@ -345,37 +440,6 @@ class Catalog:
             raise cherrypy.HTTPError(404, "Kennel not found")
         raise cherrypy.HTTPError(404, "Store not found")
 
-    def add_dog(self, userID, body):
-        dogID = str(uuid.uuid4())
-        user = next(
-            (u for u in self.catalog_data["Users"] if u["UserID"] == userID),
-            None,
-        )
-        if user:
-            body["DogID"] = dogID
-            user["Dogs"].append(body)
-            self.save_catalog()
-            return json.dumps(
-                {"status": "success", "message": f"Dog added to user {userID}"}
-            )
-        raise cherrypy.HTTPError(404, "User not found")
-
-    def delete_dog(self, userID, dogID):
-        user = next(
-            (u for u in self.catalog_data["Users"] if u["UserID"] == userID),
-            None,
-        )
-        if user:
-            user["Dogs"] = [d for d in user["Dogs"] if d["DogID"] != dogID]
-            self.save_catalog()
-            return json.dumps(
-                {
-                    "status": "success",
-                    "message": f"Dog {dogID} deleted for user {userID}",
-                }
-            )
-        raise cherrypy.HTTPError(404, "User not found")
-
     def GET(self, *uri, **params):
         auth_header = cherrypy.request.headers.get("Authorization")
         if not auth_header:
@@ -425,6 +489,29 @@ class Catalog:
                 disposition="attachment",
                 name=user["ProfilePicture"].split("/")[-1],
             )
+        elif uri[0] == "dog_picture":
+            if len(uri) < 3:
+                raise cherrypy.HTTPError(400, "Bad request, use userID and dogID")
+            user = next(
+                (u for u in self.catalog_data["Users"] if u["UserID"] == uri[1]),
+                None,
+            )
+            if not user:
+                raise cherrypy.HTTPError(404, "User not found")
+            dog = next(
+                (d for d in user["Dogs"] if d["DogID"] == uri[2]),
+                None,
+            )
+            if not dog:
+                raise cherrypy.HTTPError(404, "Dog not found")
+            if not dog["Picture"]:
+                return None
+            return static.serve_file(
+                "/app/" + dog["Picture"],
+                content_type="image/jpg",
+                disposition="attachment",
+                name=dog["Picture"].split("/")[-1],
+            )
         else:
             raise cherrypy.HTTPError(404, "Resource not found")
 
@@ -441,9 +528,12 @@ class Catalog:
             token = auth_header.split(" ")[1]
             self.verify_token(token)  # Verify the token
 
-        # Handle specific POST routes
-        body = cherrypy.request.body.read()
-        json_body = json.loads(body)
+        if cherrypy.request.headers.get("Content-Type", "").startswith(
+            "application/json"
+        ):
+            # Handle specific POST routes
+            body = cherrypy.request.body.read()
+            json_body = json.loads(body)
 
         if uri[0] == "register":
             return self.register(json_body["email"])
@@ -461,7 +551,26 @@ class Catalog:
             if len(uri) == 1:
                 raise cherrypy.HTTPError(400, "Bad request, add userID")
             userID = uri[1]
-            return self.add_dog(userID, json_body)
+            if cherrypy.request.headers.get("Content-Type", "").startswith(
+                "multipart/form-data"
+            ):
+                fields = cherrypy.request.body.params
+                dog_data_field = fields.get("dogData")
+                dog_picture_field = fields.get("dogPicture")
+
+                if not dog_data_field:
+                    raise cherrypy.HTTPError(400, "dogData is required")
+
+                dog_data = json.loads(dog_data_field)
+
+                dog_picture = None
+                if dog_picture_field:
+                    dog_picture = dog_picture_field.file
+                return self.add_dog(userID, dog_data, dog_picture)
+            elif cherrypy.request.headers.get("Content-Type", "").startswith(
+                "application/json"
+            ):
+                return self.add_dog(userID, json_body, None)
         elif uri[0] == "recover":
             return self.recover_password(json_body)
         elif uri[0] == "devices":
@@ -533,10 +642,41 @@ class Catalog:
             elif cherrypy.request.headers.get("Content-Type", "").startswith(
                 "application/json"
             ):
-                # Handle JSON-only request for user data updates
-                body = cherrypy.request.body.read()
-                user_data = json.loads(body)
                 return self.edit_user(userID, user_data, None)
+            else:
+                raise cherrypy.HTTPError(
+                    400, "Expected multipart/form-data or application/json request"
+                )
+        elif uri[0] == "dogs":
+            if len(uri) < 3:
+                raise cherrypy.HTTPError(400, "UserID and dogID is required")
+
+            userID = uri[1]
+            dogID = uri[2]
+
+            # Check for multipart data
+            if cherrypy.request.headers.get("Content-Type", "").startswith(
+                "multipart/form-data"
+            ):
+                fields = cherrypy.request.body.params
+                dog_data_field = fields.get("dogData")
+                dog_picture_field = fields.get("dogPicture")
+
+                if not dog_data_field:
+                    raise cherrypy.HTTPError(400, "dogData is required")
+
+                dog_data = json.loads(dog_data_field)
+
+                dog_picture = None
+                if dog_picture_field:
+                    dog_picture = dog_picture_field.file
+
+                # Call edit_user with or without profile picture
+                return self.edit_dog(userID, dogID, dog_data, dog_picture)
+            elif cherrypy.request.headers.get("Content-Type", "").startswith(
+                "application/json"
+            ):
+                return self.edit_dog(userID, dogID, json_body, None)
             else:
                 raise cherrypy.HTTPError(
                     400, "Expected multipart/form-data or application/json request"
@@ -563,18 +703,18 @@ class Catalog:
             user = next(
                 user for user in self.catalog_data["Users"] if user["UserID"] == user_id
             )
-            if user:
-                if user["ProfilePicture"]:
-                    os.remove(user["ProfilePicture"])
-                self.catalog_data["Users"] = [
-                    u for u in self.catalog_data["Users"] if u["UserID"] != user_id
-                ]
-                self.save_catalog()
+            if not user:
                 return json.dumps(
-                    {"status": "success", "message": f"User {uri[1]} deleted"}
+                    {"status": "error", "message": f"User {uri[1]} not found"}
                 )
+            if user["ProfilePicture"]:
+                os.remove(user["ProfilePicture"])
+            self.catalog_data["Users"] = [
+                u for u in self.catalog_data["Users"] if u["UserID"] != user_id
+            ]
+            self.save_catalog()
             return json.dumps(
-                {"status": "error", "message": f"User {uri[1]} not found"}
+                {"status": "success", "message": f"User {uri[1]} deleted"}
             )
         elif uri[0] == "profile_picture":
             # DEL request at IP:8080/profile_picture/userID
@@ -592,6 +732,28 @@ class Catalog:
                 return json.dumps(
                     {"status": "success", "message": "Profile picture deleted"}
                 )
+            return json.dumps(
+                {"status": "error", "message": f"User {uri[1]} not found"}
+            )
+        elif uri[0] == "dog_picture":
+            # DEL request at IP:8080/dog_picture/userID/dogID
+            if len(uri) < 3:
+                raise cherrypy.HTTPError(400, "Bad request, use userID and dogID")
+            user_id = uri[1]
+            dog_id = uri[2]
+            user = next(
+                user for user in self.catalog_data["Users"] if user["UserID"] == user_id
+            )
+            if user:
+                dog = next(dog for dog in user["Dogs"] if dog["DogID"] == dog_id)
+                if dog:
+                    if dog["Picture"]:
+                        os.remove(dog["Picture"])
+                    dog["Picture"] = None
+                    self.save_catalog()
+                    return json.dumps(
+                        {"status": "success", "message": "Dog rofile picture deleted"}
+                    )
             return json.dumps(
                 {"status": "error", "message": f"User {uri[1]} not found"}
             )

@@ -188,7 +188,8 @@
                     "Size": "Large",
                     "Weight": 37,
                     "CoatType": "Medium",
-                    "Allergies": ["Pollen"]
+                    "Allergies": ["Pollen"],
+                    "Picture": null
                 }
             ]
         },
@@ -202,14 +203,15 @@
             "Dogs": [
                 {
                     "Name": "Fuffi",
-                    "Breed": "German Shepherd",
+                    "Breed": "German Dachshund",
                     "Age": 5,
                     "Sex": 0,
                     "Size": "Large",
-                    "Weight": 37,
+                    "Weight": 20,
                     "CoatType": "Medium",
                     "Allergies": ["Pollen"],
-                    "DogID": "bd0bd076-9837-41cb-8999-35e1913d3529"
+                    "DogID": "fa505dab-aa21-42c1-b3b6-0fc6ba18e145",
+                    "Picture": null
                 }
             ]
         },
