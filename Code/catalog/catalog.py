@@ -381,14 +381,14 @@ class Catalog:
         )
 
     def book_kennel(self, body):
-        loc = body["location"]
+        storeID = body["storeID"]
         kennel = body["kennel"]
 
         store = next(
             (
                 store
                 for store in self.catalog_data["Stores"]
-                if store["Location"] == loc
+                if store["StoreID"] == storeID
             ),
             None,
         )
@@ -402,10 +402,10 @@ class Catalog:
         raise cherrypy.HTTPError(404, "Store not found")
 
     def lock_kennel(self, body):
-        loc = body["location"]
+        storeID = body["storeID"]
         kennel = body["kennel"]
         store = next(
-            (s for s in self.catalog_data["Stores"] if s["Location"] == loc),
+            (s for s in self.catalog_data["Stores"] if s["StoreID"] == storeID),
             None,
         )
         if store:
@@ -421,10 +421,10 @@ class Catalog:
         raise cherrypy.HTTPError(404, "Store not found")
 
     def free_kennel(self, body):
-        loc = body["location"]
+        storeID = body["storeID"]
         kennel = body["kennel"]
         store = next(
-            (s for s in self.catalog_data["Stores"] if s["Location"] == loc),
+            (s for s in self.catalog_data["Stores"] if s["StoreID"] == storeID),
             None,
         )
         if store:
@@ -642,7 +642,7 @@ class Catalog:
             elif cherrypy.request.headers.get("Content-Type", "").startswith(
                 "application/json"
             ):
-                return self.edit_user(userID, user_data, None)
+                return self.edit_user(userID, json_body, None)
             else:
                 raise cherrypy.HTTPError(
                     400, "Expected multipart/form-data or application/json request"

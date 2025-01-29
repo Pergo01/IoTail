@@ -5,6 +5,7 @@ import socket
 import cherrypy
 import requests
 import jwt
+import threading
 
 
 class ReservationManager:
@@ -73,11 +74,11 @@ class ReservationManager:
     def handle_reservation(self, data):
         dogID = data.get("dogID")
         userID = data.get("userID")
-        loc = data.get("location")
+        storeID = data.get("storeID")
         dog_size = data.get("dog_size")
 
         store = next(
-            (s for s in self.settings if s["Location"] == loc),
+            (s for s in self.settings if s["StoreID"] == storeID),
             None,
         )
         kennelID = self.find_available_kennel(store, dog_size)
@@ -85,15 +86,16 @@ class ReservationManager:
             reservationID = str(
                 uuid.uuid4()
             )  # Genera un ID univoco per la prenotazione
-            self.book_kennel(loc, int(kennelID))
+            self.book_kennel(storeID, int(kennelID))
+            reservationTime = round(time.time())
             self.reservations["reservation"].append(
                 {
                     "userID": userID,
                     "reservationID": reservationID,
                     "dogID": dogID,
                     "kennelID": kennelID,
-                    "location": loc,
-                    "timestamp": time.time(),
+                    "storeID": storeID,
+                    "timestamp": reservationTime,
                 }
             )
             self.save_reservations()
@@ -103,6 +105,7 @@ class ReservationManager:
                     "status": "confirmed",
                     "kennelID": kennelID,
                     "reservationID": reservationID,
+                    "timestamp": reservationTime,
                     "message": f"Reservation confirmed for dog {dogID})",
                 }
             )
@@ -118,7 +121,7 @@ class ReservationManager:
             None,
         )
         if reservation:
-            self.free_kennel(reservation["location"], reservation["kennelID"])
+            self.free_kennel(reservation["storeID"], reservation["kennelID"])
             self.reservations["reservation"].remove(reservation)
             self.save_reservations()
             self.get_stores()
@@ -136,12 +139,12 @@ class ReservationManager:
                 }
             )
 
-    def book_kennel(self, location: list, kennel: int):
+    def book_kennel(self, storeID: int, kennel: int):
         headers = {
             "Authorization": "Bearer reservation_manager",
             "Content-Type": "application/json",
         }
-        body = json.dumps({"location": location, "kennel": kennel})
+        body = json.dumps({"storeID": storeID, "kennel": kennel})
         response = requests.post(
             f"http://catalog:8080/book",
             headers=headers,
@@ -151,12 +154,12 @@ class ReservationManager:
             return json.loads(response.text)
         raise cherrypy.HTTPError(500, "Error booking kennel")
 
-    def free_kennel(self, location: list, kennel: int):
+    def free_kennel(self, storeID: int, kennel: int):
         headers = {
             "Authorization": "Bearer reservation_manager",
             "Content-Type": "application/json",
         }
-        body = json.dumps({"location": location, "kennel": kennel})
+        body = json.dumps({"storeID": storeID, "kennel": kennel})
         response = requests.post(
             f"http://catalog:8080/free",
             headers=headers,
@@ -165,6 +168,14 @@ class ReservationManager:
         if response.ok:
             return json.loads(response.text)
         raise cherrypy.HTTPError(500, "Error unlocking kennel")
+
+    def check_expiry(self):
+        while True:
+            current_time = round(time.time())
+            for reservation in self.reservations["reservation"]:
+                if current_time - reservation["timestamp"] > 1800:  # 30 minutes passed
+                    self.handle_cancellation(reservation["reservationID"])
+            time.sleep(1)  # Repeat every second
 
     def POST(self, *uri):
         auth_header = cherrypy.request.headers.get("Authorization")
@@ -227,6 +238,11 @@ if __name__ == "__main__":
             "request.show_tracebacks": False,
         }
     }
+
+    check_expiry_thread = threading.Thread(target=manager.check_expiry)
+    check_expiry_thread.daemon = True  # Il thread terminerà quando il programma termina
+    check_expiry_thread.start()
+
     cherrypy.tree.mount(manager, "/", conf)
     cherrypy.config.update({"server.socket_host": ip})
     cherrypy.config.update({"server.socket_port": 8083})

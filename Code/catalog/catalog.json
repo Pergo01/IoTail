@@ -195,7 +195,7 @@
         },
         {
             "UserID": "2a894e30-43ad-4576-aa17-3e29c26c5740",
-            "Name": "Pippo Franco",
+            "Name": "John Doe",
             "Email": "john.doe@gmail.com",
             "Password": "$2b$12$Bl5h/GhsMVEV5caFrJaiweINUpz2Ya9o3FHmSqS.C5XmrdrzsYxFa",
             "PhoneNumber": "+123456789",
@@ -227,6 +227,7 @@
     ],
     "Stores": [
         {
+            "StoreID": 0,
             "Name": "Carrefour",
             "Location": [44.8837, 7.3007],
             "Kennels": [
@@ -251,13 +252,14 @@
             ]
         },
         {
+            "StoreID": 1,
             "Name": "Carrefour Market",
             "Location": [44.8776, 7.3322],
             "Kennels": [
                 {
                     "ID": 3,
                     "Size": "Small",
-                    "Booked": true,
+                    "Booked": false,
                     "Occupied": false
                 },
                 {
@@ -275,13 +277,14 @@
             ]
         },
         {
+            "StoreID": 2,
             "Name": "Unieuro",
             "Location": [44.8835, 7.3017],
             "Kennels": [
                 {
                     "ID": 6,
                     "Size": "Small",
-                    "Booked": true,
+                    "Booked": false,
                     "Occupied": false
                 },
                 {
@@ -299,13 +302,14 @@
             ]
         },
         {
+            "StoreID": 3,
             "Name": "Expert Chiale",
             "Location": [44.8855, 7.3051],
             "Kennels": [
                 {
                     "ID": 9,
                     "Size": "Small",
-                    "Booked": true,
+                    "Booked": false,
                     "Occupied": false
                 },
                 {
@@ -323,13 +327,14 @@
             ]
         },
         {
+            "StoreID": 4,
             "Name": "Eurospin",
             "Location": [44.882, 7.3165],
             "Kennels": [
                 {
                     "ID": 12,
                     "Size": "Small",
-                    "Booked": true,
+                    "Booked": false,
                     "Occupied": false
                 },
                 {
@@ -347,13 +352,14 @@
             ]
         },
         {
+            "StoreID": 5,
             "Name": "Conad",
             "Location": [44.8864, 7.3385],
             "Kennels": [
                 {
                     "ID": 15,
                     "Size": "Small",
-                    "Booked": true,
+                    "Booked": false,
                     "Occupied": false
                 },
                 {
@@ -371,13 +377,14 @@
             ]
         },
         {
+            "StoreID": 6,
             "Name": "Carrefour Express",
             "Location": [44.8848, 7.3352],
             "Kennels": [
                 {
                     "ID": 18,
                     "Size": "Small",
-                    "Booked": true,
+                    "Booked": false,
                     "Occupied": false
                 },
                 {
@@ -395,13 +402,14 @@
             ]
         },
         {
+            "StoreID": 7,
             "Name": "Le Due Valli",
             "Location": [44.8838, 7.3531],
             "Kennels": [
                 {
                     "ID": 21,
                     "Size": "Small",
-                    "Booked": true,
+                    "Booked": false,
                     "Occupied": false
                 },
                 {
@@ -419,13 +427,14 @@
             ]
         },
         {
+            "StoreID": 8,
             "Name": "Lidl",
             "Location": [44.8888, 7.3542],
             "Kennels": [
                 {
                     "ID": 24,
                     "Size": "Small",
-                    "Booked": true,
+                    "Booked": false,
                     "Occupied": false
                 },
                 {
