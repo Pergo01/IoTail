@@ -309,6 +309,8 @@ class Catalog:
             with open(file_path, "wb") as f:
                 shutil.copyfileobj(picture, f)
             body["Picture"] = file_path  # Save the relative path
+        else:
+            body["Picture"] = None
         user["Dogs"].append(body)
         self.save_catalog()
         return json.dumps(
