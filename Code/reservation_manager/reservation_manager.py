@@ -169,7 +169,7 @@ class ReservationManager:
         if response.ok:
             message = {"message": "on"}
             self.publish(
-                self.baseTopic + "kennel1/leds/redled", json.dumps(message), 2
+                self.baseTopic + "/kennel1/leds/redled", json.dumps(message), 2
             )  # SHOULD BE "kennel{kennelID}/leds/redled" but we have just one led per color
             return json.loads(response.text)
         raise cherrypy.HTTPError(500, "Error booking kennel")
@@ -188,7 +188,7 @@ class ReservationManager:
         if response.ok:
             message = {"message": "off"}
             self.publish(
-                self.baseTopic + "kennel1/leds/redled", json.dumps(message), 2
+                self.baseTopic + "/kennel1/leds/redled", json.dumps(message), 2
             )  # SHOULD BE "kennel{kennelID}/leds/redled" but we have just one led per color
             return json.loads(response.text)
         raise cherrypy.HTTPError(500, "Error unlocking kennel")
