@@ -78,6 +78,8 @@ services:
       - ./settings.json:/app/settings.json
       - ./reservation_manager/reservation.json:/app/reservation.json
       - ./secret_key.txt:/app/secret_key.txt
+      - ./Libraries:/app/Libraries
+      - ./mqtt_settings.json:/app/mqtt_settings.json
     depends_on:
       - catalog
       - mosquitto

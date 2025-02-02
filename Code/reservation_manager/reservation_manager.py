@@ -6,16 +6,22 @@ import cherrypy
 import requests
 import jwt
 import threading
+from Libraries import Publisher
 
 
 class ReservationManager:
     exposed = True
 
-    def __init__(self, reservation_file):
+    def __init__(self, reservation_file, clientID, broker, port, baseTopic):
         with open("secret_key.txt") as f:
             self.secret_key = f.read()
         self.get_stores()
         self.reservation_file = reservation_file
+        self.clientID = clientID
+        self.broker = broker
+        self.port = port
+        self.baseTopic = baseTopic
+        self.client = Publisher(clientID, broker, port, self)
 
         # Carica le prenotazioni esistenti dal file, se presente
         try:
@@ -23,6 +29,16 @@ class ReservationManager:
                 self.reservations = json.load(f)
         except FileNotFoundError:
             self.reservations = {}
+
+    def start(self):
+        self.client.start()
+        time.sleep(1)
+
+    def publish(self, topic, message, QoS):
+        self.client.publish(topic, message, QoS)
+
+    def stop(self):
+        self.client.stop()
 
     def get_stores(self):
         headers = {
@@ -151,6 +167,10 @@ class ReservationManager:
             data=body,
         )
         if response.ok:
+            message = {"message": "on"}
+            self.publish(
+                self.baseTopic + "kennel1/leds/redled", json.dumps(message), 2
+            )  # SHOULD BE "kennel{kennelID}/leds/redled" but we have just one led per color
             return json.loads(response.text)
         raise cherrypy.HTTPError(500, "Error booking kennel")
 
@@ -166,6 +186,10 @@ class ReservationManager:
             data=body,
         )
         if response.ok:
+            message = {"message": "off"}
+            self.publish(
+                self.baseTopic + "kennel1/leds/redled", json.dumps(message), 2
+            )  # SHOULD BE "kennel{kennelID}/leds/redled" but we have just one led per color
             return json.loads(response.text)
         raise cherrypy.HTTPError(500, "Error unlocking kennel")
 
@@ -223,7 +247,14 @@ class ReservationManager:
 
 if __name__ == "__main__":
     # Load settings and initialize the manager
-    manager = ReservationManager("reservation.json")
+    settings = json.load(open("mqtt_settings.json"))
+    manager = ReservationManager(
+        "reservation.json",
+        "ReservationManager",
+        settings["broker"],
+        settings["port"],
+        settings["baseTopic"],
+    )
 
     # Determine the local IP address
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
