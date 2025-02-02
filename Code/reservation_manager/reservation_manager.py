@@ -255,6 +255,7 @@ if __name__ == "__main__":
         settings["port"],
         settings["baseTopic"],
     )
+    manager.start()
 
     # Determine the local IP address
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -279,3 +280,4 @@ if __name__ == "__main__":
     cherrypy.config.update({"server.socket_port": 8083})
     cherrypy.engine.start()
     cherrypy.engine.block()
+    manager.stop()
