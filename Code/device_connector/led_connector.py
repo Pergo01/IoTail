@@ -18,6 +18,7 @@ class Led:
 
     def notify(self, topic, msg):
         message = json.loads(msg)
+        print(topic, message)
         if message["message"].lower() == "on":
             self.led.on()
         elif message["message"].lower() == "off":
