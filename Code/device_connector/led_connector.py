@@ -2,6 +2,7 @@ from gpiozero import LED
 from Libraries import Subscriber
 import time
 import json
+import signal
 
 
 class Led:
@@ -31,14 +32,26 @@ class Led:
         self.client.stop()
 
 
+def signal_handler(sig, frame, *leds):
+    """Handles Ctrl+C to stop the LEDs cleanly"""
+    print("\nStopping MQTT LED service...")
+    for led in leds:
+        led.stop()
+
+
 if __name__ == "__main__":
     settings = json.load(open("mqtt_settings.json"))
-    led = Led(21, "RedLED", settings["broker"], settings["port"])
-    led.start()
-    led.subscribe(settings["baseTopic"] + "/kennel1/leds/redled", 0)
-    while True:
-        try:
-            time.sleep(1)
-        except KeyboardInterrupt:
-            break
-    led.stop()
+    redled = Led(21, "RedLED", settings["broker"], settings["port"])
+    greenled = Led(26, "GreenLED", settings["broker"], settings["port"])
+    yellowled = Led(16, "YellowLED", settings["broker"], settings["port"])
+    redled.start()
+    greenled.start()
+    yellowled.start()
+    redled.subscribe(settings["baseTopic"] + "/kennel1/leds/redled", 0)
+    greenled.subscribe(settings["baseTopic"] + "/kennel1/leds/greenled", 0)
+    yellowled.subscribe(settings["baseTopic"] + "/kennel1/leds/yellowled", 0)
+    # Wait for keyboardinterrupt
+    signal.signal(signal.SIGINT, signal_handler)
+
+    # Keep the script running without a while loop
+    signal.pause()
