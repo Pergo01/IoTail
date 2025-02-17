@@ -20,7 +20,7 @@ class ThingspeakAdaptor:
             f"https://api.thingspeak.com/update?api_key={self.thingspeak_api_key}"
         )
 
-        # Dizionario per tenere traccia dei valori piÃ¹ recenti
+        # Dizionario per tenere traccia dei valori più recenti
         self.latest_values = {"temperature": None, "humidity": None, "motion": None}
 
     def start(self):

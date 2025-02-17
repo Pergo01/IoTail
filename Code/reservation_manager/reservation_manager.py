@@ -22,11 +22,21 @@ class ReservationManager:
         self.port = port
         self.baseTopic = baseTopic
         self.client = Publisher(clientID, broker, port, self)
+        message = {"message": "on"}
+        for store in self.settings:
+            for kennel in store["Kennels"]:  # set all kennel leds as free when starting
+                self.publish(
+                    self.baseTopic + "/kennel1/leds/greenled", message, 2
+                )  # SHOULD BE "kennel{kennel["ID"]}/leds/greenled" but we have just one led
 
         # Carica le prenotazioni esistenti dal file, se presente
         try:
             with open(self.reservation_file) as f:
                 self.reservations = json.load(f)
+            for reservation in self.reservations["reservation"]:
+                self.occupy_kennel(
+                    reservation["storeID"], reservation["kennelID"]
+                )  # set reserved kennels as occupied
         except FileNotFoundError:
             self.reservations = {}
 
@@ -104,6 +114,11 @@ class ReservationManager:
             )  # Genera un ID univoco per la prenotazione
             self.book_kennel(storeID, int(kennelID))
             reservationTime = round(time.time())
+            unlockCode = [
+                kennel["unlockCode"]
+                for kennel in store["Kennels"]
+                if kennel["ID"] == kennelID
+            ][0]
             self.reservations["reservation"].append(
                 {
                     "userID": userID,
@@ -111,6 +126,8 @@ class ReservationManager:
                     "dogID": dogID,
                     "kennelID": kennelID,
                     "storeID": storeID,
+                    "active": False,
+                    "unlockCode": unlockCode,
                     "timestamp": reservationTime,
                 }
             )
@@ -125,7 +142,7 @@ class ReservationManager:
                     "message": f"Reservation confirmed for dog {dogID})",
                 }
             )
-        return json.dumps({"status": "unavailable", "message": "No kennels available"})
+        raise cherrypy.HTTPError(404, "No available kennels")
 
     def handle_cancellation(self, reservationID):
         reservation = next(
@@ -155,6 +172,36 @@ class ReservationManager:
                 }
             )
 
+    def handle_activation(self, reservationID, unlockCode):
+        reservation = next(
+            (
+                res
+                for res in self.reservations["reservation"]
+                if (res["reservationID"]) == reservationID
+            ),
+            None,
+        )
+        if reservation:
+            if reservation["unlockCode"] != unlockCode:
+                raise cherrypy.HTTPError(status=401, message="Invalid unlock code")
+            self.occupy_kennel(reservation["storeID"], reservation["kennelID"])
+            reservation["active"] = True
+            self.save_reservations()
+            self.get_stores()
+            return json.dumps(
+                {
+                    "status": "active",
+                    "message": f"Reservation in kennel {reservation['kennelID']} activated",
+                }
+            )
+        else:
+            return json.dumps(
+                {
+                    "status": "not_found",
+                    "message": f"No reservation found for id {reservationID}",
+                }
+            )
+
     def book_kennel(self, storeID: int, kennel: int):
         headers = {
             "Authorization": "Bearer reservation_manager",
@@ -167,10 +214,14 @@ class ReservationManager:
             data=body,
         )
         if response.ok:
+            message = {"message": "off"}
+            self.publish(
+                self.baseTopic + "/kennel1/leds/greenled", message, 2
+            )  # SHOULD BE "kennel{kennelID}/leds/greenled" but we have just one led per color
             message = {"message": "on"}
             self.publish(
-                self.baseTopic + "/kennel1/leds/redled", message, 2
-            )  # SHOULD BE "kennel{kennelID}/leds/redled" but we have just one led per color
+                self.baseTopic + "/kennel1/leds/yellowled", message, 2
+            )  # SHOULD BE "kennel{kennelID}/leds/yellowled" but we have just one led per color
             return json.loads(response.text)
         raise cherrypy.HTTPError(500, "Error booking kennel")
 
@@ -188,6 +239,36 @@ class ReservationManager:
         if response.ok:
             message = {"message": "off"}
             self.publish(
+                self.baseTopic + "/kennel1/leds/yellowled", message, 2
+            )  # SHOULD BE "kennel{kennelID}/leds/yellowled" but we have just one led per color
+            self.publish(
+                self.baseTopic + "/kennel1/leds/redled", message, 2
+            )  # SHOULD BE "kennel{kennelID}/leds/redled" but we have just one led per color
+            message = {"message": "on"}
+            self.publish(
+                self.baseTopic + "/kennel1/leds/greenled", message, 2
+            )  # SHOULD BE "kennel{kennelID}/leds/greenled" but we have just one led per color
+            return json.loads(response.text)
+        raise cherrypy.HTTPError(500, "Error unlocking kennel")
+
+    def occupy_kennel(self, storeID: int, kennel: int):
+        headers = {
+            "Authorization": "Bearer reservation_manager",
+            "Content-Type": "application/json",
+        }
+        body = json.dumps({"storeID": storeID, "kennel": kennel})
+        response = requests.post(
+            f"http://catalog:8080/lock",
+            headers=headers,
+            data=body,
+        )
+        if response.ok:
+            message = {"message": "off"}
+            self.publish(
+                self.baseTopic + "/kennel1/leds/yellowled", message, 2
+            )  # SHOULD BE "kennel{kennelID}/leds/yellowled" but we have just one led per color
+            message = {"message": "on"}
+            self.publish(
                 self.baseTopic + "/kennel1/leds/redled", message, 2
             )  # SHOULD BE "kennel{kennelID}/leds/redled" but we have just one led per color
             return json.loads(response.text)
@@ -196,9 +277,13 @@ class ReservationManager:
     def check_expiry(self):
         while True:
             current_time = round(time.time())
-            for reservation in self.reservations["reservation"]:
-                if current_time - reservation["timestamp"] > 1800:  # 30 minutes passed
-                    self.handle_cancellation(reservation["reservationID"])
+            if self.reservations:
+                for reservation in self.reservations["reservation"]:
+                    if (
+                        current_time - reservation["timestamp"] > 1800
+                        and not reservation["active"]
+                    ):  # 30 minutes passed
+                        self.handle_cancellation(reservation["reservationID"])
             time.sleep(1)  # Repeat every second
 
     def POST(self, *uri):
@@ -211,6 +296,13 @@ class ReservationManager:
             body = cherrypy.request.body.read()
             data = json.loads(body)
             return self.handle_reservation(data)
+        if uri[0] == "activate":
+            if len(uri) < 2:
+                raise cherrypy.HTTPError(400, "Reservation ID required")
+            reservationID = uri[1]
+            body = cherrypy.request.body.read()
+            data = json.loads(body)
+            return self.handle_activation(reservationID, data["unlockCode"])
         else:
             raise cherrypy.HTTPError(404, "Endpoint not found")
 

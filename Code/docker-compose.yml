@@ -73,6 +73,8 @@ services:
     build: ./reservation_manager
     ports:
       - "8083:8083"
+    environment:
+    - MQTT_HOST=mosquitto
     volumes:
       - ./reservation_manager:/app
       - ./settings.json:/app/settings.json
@@ -89,6 +91,8 @@ services:
 
   thingspeak_adaptor:
     build: ./thingspeak_adaptor
+    environment:
+    - MQTT_HOST=mosquitto
     volumes:
       - ./thingspeak_adaptor:/app
       - ./settings.json:/app/settings.json
