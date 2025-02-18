@@ -5,11 +5,21 @@ Code/settings.json
 Code/device_connector/__pycache__/*
 Code/device_connector/Libraries/*
 Code/device_connector/mqtt_settings.json
+Code/device_connector/settings.json
 Code/camera/__pycache__/*
 Code/camera/mqtt_settings.json
+Code/camera/settings.json
 Code/secret_key.txt
 Code/catalog/secret_key.txt
 Code/catalog/.env
+Code/catalog/settings.json
 Code/reservation_manager/secret_key.txt
+Code/reservation_manager/mqtt_settings.json
+Code/reservation_manager/settings.json
+Code/data_analysis/mqtt_settings.json
+Code/data_analysis/settings.json
+Code/disinfection_system/settings.json
+Code/thingspeak_adaptor/settings.json
+Code/thingspeak_adaptor/mqtt_settings.json
 
 !Code/node-red-data/node-red-flow.json
