@@ -32,11 +32,12 @@ class Led:
         self.client.stop()
 
 
-def signal_handler(sig, frame, *leds):
+def signal_handler(sig, frame):
     """Handles Ctrl+C to stop the LEDs cleanly"""
     print("\nStopping MQTT LED service...")
-    for led in leds:
-        led.stop()
+    redled.stop()
+    greenled.stop()
+    yellowled.stop()
 
 
 if __name__ == "__main__":

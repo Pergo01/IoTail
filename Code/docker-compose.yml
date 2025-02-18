@@ -61,7 +61,8 @@ services:
     build: ./data_analysis
     volumes:
       - ./data_analysis:/app
-      - ./settings.json:/app/settings.json
+      - ./Libraries:/app/Libraries
+      - ./mqtt_settings.json:/app/mqtt_settings.json
     depends_on:
       - catalog
       - mosquitto

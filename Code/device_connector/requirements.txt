@@ -1,5 +1,4 @@
 RPi.GPIO==0.7.1
-opencv-python==4.5.3.56
 paho-mqtt==1.6.1
 requests==2.26.0
 CherryPy==18.10.0
