@@ -10,7 +10,7 @@ class DataAnalysis:
         self.broker = broker
         self.port = port
         self.client = PublisherSubscriber(clientID, broker, port, self)
-
+        self.settings = json.load(open("mqtt_settings.json"))
         self.catalog_url = self.settings["catalog_url"]
 
     # self.broker_info = self.get_broker_info()
