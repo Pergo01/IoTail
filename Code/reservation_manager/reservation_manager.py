@@ -114,11 +114,14 @@ class ReservationManager:
             )  # Genera un ID univoco per la prenotazione
             self.book_kennel(storeID, int(kennelID))
             reservationTime = round(time.time())
-            unlockCode = [
-                kennel["unlockCode"]
-                for kennel in store["Kennels"]
-                if kennel["ID"] == kennelID
-            ][0]
+            unlockCode = next(
+                (
+                    kennel["unlockCode"]
+                    for kennel in store["Kennels"]
+                    if kennel["ID"] == kennelID
+                ),
+                None,
+            )
             self.reservations["reservation"].append(
                 {
                     "userID": userID,
