@@ -5,6 +5,10 @@
     },
     "Breeds": [
         {
+            "BreedID": 0,
+            "Name": "Mixed Breed"
+        },
+        {
             "BreedID": 1,
             "Name": "German Shepherd",
             "MaxIdealTemperature": 24,

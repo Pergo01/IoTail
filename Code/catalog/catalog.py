@@ -326,20 +326,40 @@ class Catalog:
         if not user:
             raise cherrypy.HTTPError(404, "User not found")
 
-        dog = dog = next(
+        dog = next(
             (d for d in user["Dogs"] if d["DogID"] == dogID),
             None,
         )
+        if not dog:
+            raise cherrypy.HTTPError(404, "Dog not found")
 
-        # Update user details from the JSON body
+        # Update dog details from the JSON body
         dog["Name"] = body["name"]
-        dog["BreedID"] = body["breedID"]
         dog["Age"] = body["age"]
         dog["Sex"] = body["sex"]
         dog["Size"] = body["size"]
         dog["Weight"] = body["weight"]
         dog["CoatType"] = body["coatType"]
         dog["Allergies"] = body["allergies"]
+
+        if dog["BreedID"] == 0:
+            if body["breedID"] == 0:
+                dog["MinIdealTemperature"] = body["minIdealTemperature"]
+                dog["MaxIdealTemperature"] = body["maxIdealTemperature"]
+                dog["MinIdealHumidity"] = body["minIdealHumidity"]
+                dog["MaxIdealHumidity"] = body["maxIdealHumidity"]
+            else:
+                dog["BreedID"] = body["breedID"]
+                del dog["MinIdealTemperature"]
+                del dog["MaxIdealTemperature"]
+                del dog["MinIdealHumidity"]
+                del dog["MaxIdealHumidity"]
+        else:
+            dog["BreedID"] = body["breedID"]
+            dog["MinIdealTemperature"] = body["minIdealTemperature"]
+            dog["MaxIdealTemperature"] = body["maxIdealTemperature"]
+            dog["MinIdealHumidity"] = body["minIdealHumidity"]
+            dog["MaxIdealHumidity"] = body["maxIdealHumidity"]
 
         # Handle profile picture file
         if file:
