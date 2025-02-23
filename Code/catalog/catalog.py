@@ -333,7 +333,7 @@ class Catalog:
 
         # Update user details from the JSON body
         dog["Name"] = body["name"]
-        dog["Breed"] = body["breed"]
+        dog["BreedID"] = body["breedID"]
         dog["Age"] = body["age"]
         dog["Sex"] = body["sex"]
         dog["Size"] = body["size"]

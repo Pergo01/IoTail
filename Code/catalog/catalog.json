@@ -182,7 +182,7 @@
                 {
                     "DogID": "oafjfahiuafduj12oieqo0310445",
                     "Name": "Fuffi",
-                    "Breed": "German Shepherd",
+                    "BreedID": 1,
                     "Age": 5,
                     "Sex": 0,
                     "Size": "Large",
@@ -203,11 +203,11 @@
             "Dogs": [
                 {
                     "Name": "Fuffi",
-                    "Breed": "German Dachshund",
+                    "BreedID": 2,
                     "Age": 5,
                     "Sex": 0,
                     "Size": "Large",
-                    "Weight": 20,
+                    "Weight": 20.0,
                     "CoatType": "Medium",
                     "Allergies": ["Pollen"],
                     "DogID": "fa505dab-aa21-42c1-b3b6-0fc6ba18e145",
