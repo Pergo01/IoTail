@@ -349,17 +349,17 @@ class Catalog:
                 dog["MinIdealHumidity"] = body["minIdealHumidity"]
                 dog["MaxIdealHumidity"] = body["maxIdealHumidity"]
             else:
-                dog["BreedID"] = body["breedID"]
                 del dog["MinIdealTemperature"]
                 del dog["MaxIdealTemperature"]
                 del dog["MinIdealHumidity"]
                 del dog["MaxIdealHumidity"]
         else:
-            dog["BreedID"] = body["breedID"]
             dog["MinIdealTemperature"] = body["minIdealTemperature"]
             dog["MaxIdealTemperature"] = body["maxIdealTemperature"]
             dog["MinIdealHumidity"] = body["minIdealHumidity"]
             dog["MaxIdealHumidity"] = body["maxIdealHumidity"]
+
+        dog["BreedID"] = body["breedID"]
 
         # Handle profile picture file
         if file:
