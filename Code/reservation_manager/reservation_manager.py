@@ -22,12 +22,6 @@ class ReservationManager:
         self.port = port
         self.baseTopic = baseTopic
         self.client = Publisher(clientID, broker, port, self)
-        message = {"message": "on"}
-        for store in self.settings:
-            for kennel in store["Kennels"]:  # set all kennel leds as free when starting
-                self.publish(
-                    self.baseTopic + "/kennel1/leds/greenled", message, 2
-                )  # SHOULD BE "kennel{kennel["ID"]}/leds/greenled" but we have just one led
 
         # Carica le prenotazioni esistenti dal file, se presente
         try:
@@ -42,6 +36,12 @@ class ReservationManager:
 
     def start(self):
         self.client.start()
+        message = {"message": "on"}
+        for store in self.settings:
+            for kennel in store["Kennels"]:  # set all kennel leds as free when starting
+                self.publish(
+                    self.baseTopic + "/kennel1/leds/greenled", message, 2
+                )  # SHOULD BE "kennel{kennel["ID"]}/leds/greenled" but we have just one led
         time.sleep(1)
 
     def publish(self, topic, message, QoS):
@@ -63,6 +63,8 @@ class ReservationManager:
             exit(1)
 
     def verify_token(self, token):
+        if token == "data_analysis":
+            return token
         try:
             decoded = jwt.decode(token, self.secret_key, algorithms=["HS256"])
             return decoded
@@ -350,7 +352,6 @@ if __name__ == "__main__":
         settings["port"],
         settings["baseTopic"],
     )
-    manager.start()
 
     # Determine the local IP address
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -374,5 +375,6 @@ if __name__ == "__main__":
     cherrypy.config.update({"server.socket_host": ip})
     cherrypy.config.update({"server.socket_port": 8083})
     cherrypy.engine.start()
+    manager.start()
     cherrypy.engine.block()
     manager.stop()

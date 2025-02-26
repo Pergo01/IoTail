@@ -2,6 +2,8 @@ import json
 from Libraries import PublisherSubscriber
 import time
 import signal
+import requests
+import threading
 
 
 class DataAnalysis:
@@ -12,6 +14,52 @@ class DataAnalysis:
         self.client = PublisherSubscriber(clientID, broker, port, self)
         self.settings = json.load(open("settings.json"))
         self.catalog_url = self.settings["catalog_url"]
+        time.sleep(10)  # WAITING FOR RESERVATION_MANAGER TO START
+        self.get_data()
+
+    def get_data(self):
+        self.get_breeds()
+        self.get_dogs()
+        self.get_reservations()
+
+    def get_breeds(self):
+        headers = {
+            "Authorization": f"Bearer data_analysis",
+            "Content-Type": "application/json",
+        }
+        response = requests.get(
+            self.settings["catalog_url"] + "/breeds", headers=headers
+        )
+        if response.status_code != 200:
+            raise Exception("Failed to get breeds")
+        self.breeds = response.json()
+
+    def get_dogs(self):
+        headers = {
+            "Authorization": f"Bearer data_analysis",
+            "Content-Type": "application/json",
+        }
+        response = requests.get(
+            self.settings["catalog_url"] + "/users", headers=headers
+        )
+        if response.status_code != 200:
+            raise Exception("Failed to get dogs")
+        self.dogs = []
+        for user in response.json():
+            if user["Dogs"]:
+                self.dogs.extend(user["Dogs"])
+
+    def get_reservations(self):
+        headers = {
+            "Authorization": f"Bearer data_analysis",
+            "Content-Type": "application/json",
+        }
+        response = requests.get(
+            "http://reservation_manager:8083/status", headers=headers
+        )
+        if response.status_code != 200:
+            raise Exception("Failed to get reservations")
+        self.reservations = response.json()
 
     # self.broker_info = self.get_broker_info()
     """
@@ -47,6 +95,11 @@ class DataAnalysis:
     def stop(self):
         self.client.stop()
 
+    def refresh(self):
+        while True:
+            self.get_data()
+            time.sleep(60)
+
 
 def signal_handler(sig, frame):
     """Handles Ctrl+C to stop the LEDs cleanly"""
@@ -57,7 +110,13 @@ def signal_handler(sig, frame):
 if __name__ == "__main__":
     settings = json.load(open("mqtt_settings.json"))
     analysis = DataAnalysis("DataAnalysis", settings["broker"], settings["port"])
+
+    refresh_thread = threading.Thread(target=analysis.refresh)
+    refresh_thread.daemon = True  # Il thread terminerà quando il programma termina
+    refresh_thread.start()
+
     analysis.start()
+    analysis.subscribe(settings["baseTopic"] + "/kennel1/sensors", 0)
     # Wait for keyboardinterrupt
     signal.signal(signal.SIGINT, signal_handler)
 

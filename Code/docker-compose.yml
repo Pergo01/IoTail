@@ -64,8 +64,11 @@ services:
       - ./Libraries:/app/Libraries
       - ./mqtt_settings.json:/app/mqtt_settings.json
       - ./settings.json:/app/settings.json
+    environment:
+    - MQTT_HOST=mosquitto
     depends_on:
       - catalog
+      - reservation_manager
       - mosquitto
     restart: always
     networks:
