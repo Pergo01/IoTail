@@ -116,6 +116,7 @@ class Catalog:
                 "Password": hashed_password,
                 "PhoneNumber": body["phone"],
                 "ProfilePicture": None,
+                "FirebaseTokens": [body["firebaseToken"]],
                 "Dogs": [],
             }
         )
@@ -168,6 +169,13 @@ class Catalog:
         ):
             role = user.get("Role", "client")  # Default role is "client"
             token = self.generate_token(user["UserID"], role)
+            firebaseToken = body.get("firebaseToken", None)
+            if (
+                firebaseToken is not None
+                and firebaseToken not in user["FirebaseTokens"]
+            ):
+                user["FirebaseTokens"].append(body["firebaseToken"])
+                self.save_catalog()
             return json.dumps(
                 {
                     "status": "success",
@@ -177,6 +185,23 @@ class Catalog:
                 }
             )
         raise cherrypy.HTTPError(401, "Invalid credentials")
+
+    def logout(self, userID, firebaseToken):
+        user = next(
+            (u for u in self.catalog_data["Users"] if u["UserID"] == userID),
+            None,
+        )
+        if not user:
+            raise cherrypy.HTTPError(404, "User not found")
+        if firebaseToken in user["FirebaseTokens"]:
+            user["FirebaseTokens"].remove(firebaseToken)
+        self.save_catalog()
+        return json.dumps(
+            {
+                "status": "success",
+                "message": f"User {userID} logged out",
+            }
+        )
 
     def recover_password(self, body):
         user = next(
@@ -563,6 +588,8 @@ class Catalog:
             return self.confirm_registration(json_body)
         elif uri[0] == "login":
             return self.login(json_body)
+        elif uri[0] == "logout":
+            return self.logout(json_body["userID"], json_body["firebaseToken"])
         elif uri[0] == "book":
             return self.book_kennel(json_body)
         elif uri[0] == "lock":

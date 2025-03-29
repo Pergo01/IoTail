@@ -182,6 +182,7 @@
             "Email": "claudiosulas@example.com",
             "PhoneNumber": "+1234567890",
             "ProfilePicture": null,
+            "FirebaseTokens": ["jajfaekqkakoeafakpocmajiq03q9r37qyhd"],
             "Dogs": [
                 {
                     "DogID": "oafjfahiuafduj12oieqo0310445",
@@ -204,6 +205,9 @@
             "Password": "$2b$12$Bl5h/GhsMVEV5caFrJaiweINUpz2Ya9o3FHmSqS.C5XmrdrzsYxFa",
             "PhoneNumber": "+123456789",
             "ProfilePicture": null,
+            "FirebaseTokens": [
+                "fqufFC2FQYeGnk60BGHloF:APA91bFVHOdScVXGamzZc7LSBFD5G4fJqWSJZigyMvE1SRYMA7b4Z4VemrHPPI3_cP4eXfWjbPJDVuICoTjXFFO5e1Lh0XgxxqpJbKDp4l3UEVfTwGSd1Uw"
+            ],
             "Dogs": [
                 {
                     "Name": "Fuffi",
@@ -226,6 +230,7 @@
             "Password": "$2b$12$GlMI6I6iHYN64oMTHc9HoOArXdDU8bBAcNZ.Zl6JSyWFYlWWOO/fC",
             "PhoneNumber": "+987654321",
             "ProfilePicture": null,
+            "FirebaseTokens": [],
             "Dogs": []
         }
     ],

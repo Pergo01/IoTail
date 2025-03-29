@@ -37,25 +37,25 @@ services:
     networks:
       - iotail_network
 
-  # camera:
-  #   build: ./camera
-  #   ports:
-  #     - "8090:8090"
-  #   environment:
-  #     - MQTT_HOST=mosquitto
-  #   volumes:
-  #     - ./camera:/app
-  #     - ./settings.json:/app/settings.json
-  #     - ./Libraries:/app/Libraries
-  #     - ./mqtt_settings.json:/app/mqtt_settings.json
-  #   devices:
-  #     - /dev/video0:/dev/video0
-  #   depends_on:
-  #     - catalog
-  #     - mosquitto
-  #   restart: always
-  #   networks:
-  #     - iotail_network 
+  camera:
+    build: ./camera
+    ports:
+      - "8090:8090"
+    environment:
+      - MQTT_HOST=mosquitto
+    volumes:
+      - ./camera:/app
+      - ./settings.json:/app/settings.json
+      - ./Libraries:/app/Libraries
+      - ./mqtt_settings.json:/app/mqtt_settings.json
+    devices:
+      - /dev/video0:/dev/video0
+    depends_on:
+      - catalog
+      - mosquitto
+    restart: always
+    networks:
+      - iotail_network 
 
   data_analysis:
     build: ./data_analysis
@@ -64,6 +64,7 @@ services:
       - ./Libraries:/app/Libraries
       - ./mqtt_settings.json:/app/mqtt_settings.json
       - ./settings.json:/app/settings.json
+      - ./firebase_account_key.json:/app/firebase_account_key.json
     environment:
     - MQTT_HOST=mosquitto
     depends_on:

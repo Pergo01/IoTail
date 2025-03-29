@@ -10,6 +10,7 @@ Code/camera/__pycache__/*
 Code/camera/mqtt_settings.json
 Code/camera/settings.json
 Code/secret_key.txt
+Code/firebase_account_key.json
 Code/catalog/secret_key.txt
 Code/catalog/.env
 Code/catalog/settings.json
@@ -18,6 +19,7 @@ Code/reservation_manager/mqtt_settings.json
 Code/reservation_manager/settings.json
 Code/data_analysis/mqtt_settings.json
 Code/data_analysis/settings.json
+Code/data_analysis/firebase_account_key.json
 Code/disinfection_system/settings.json
 Code/thingspeak_adaptor/settings.json
 Code/thingspeak_adaptor/mqtt_settings.json
