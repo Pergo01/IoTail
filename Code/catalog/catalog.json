@@ -205,9 +205,7 @@
             "Password": "$2b$12$Bl5h/GhsMVEV5caFrJaiweINUpz2Ya9o3FHmSqS.C5XmrdrzsYxFa",
             "PhoneNumber": "+123456789",
             "ProfilePicture": null,
-            "FirebaseTokens": [
-                "fqufFC2FQYeGnk60BGHloF:APA91bFVHOdScVXGamzZc7LSBFD5G4fJqWSJZigyMvE1SRYMA7b4Z4VemrHPPI3_cP4eXfWjbPJDVuICoTjXFFO5e1Lh0XgxxqpJbKDp4l3UEVfTwGSd1Uw"
-            ],
+            "FirebaseTokens": [],
             "Dogs": [
                 {
                     "Name": "Fuffi",

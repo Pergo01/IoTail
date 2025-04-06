@@ -20,8 +20,10 @@ Code/reservation_manager/settings.json
 Code/data_analysis/mqtt_settings.json
 Code/data_analysis/settings.json
 Code/data_analysis/firebase_account_key.json
+Code/data_analysis/Libraries
 Code/disinfection_system/settings.json
 Code/thingspeak_adaptor/settings.json
 Code/thingspeak_adaptor/mqtt_settings.json
+Code/thingspeak_adaptor/Libraries
 
 !Code/node-red-data/node-red-flow.json

@@ -41,7 +41,7 @@ class ReservationManager:
             for kennel in store["Kennels"]:  # set all kennel leds as free when starting
                 self.publish(
                     self.baseTopic + "/kennel1/leds/greenled", message, 2
-                )  # SHOULD BE "kennel{kennel["ID"]}/leds/greenled" but we have just one led
+                )  # SHOULD BE f"kennel{kennel["ID"]}/leds/greenled" but we have just one led
         time.sleep(1)
 
     def publish(self, topic, message, QoS):
@@ -133,6 +133,65 @@ class ReservationManager:
                     "storeID": storeID,
                     "active": False,
                     "unlockCode": unlockCode,
+                    "timestamp": reservationTime,
+                }
+            )
+            self.save_reservations()
+            self.get_stores()
+            return json.dumps(
+                {
+                    "status": "confirmed",
+                    "kennelID": kennelID,
+                    "reservationID": reservationID,
+                    "timestamp": reservationTime,
+                    "message": f"Reservation confirmed for dog {dogID})",
+                }
+            )
+        raise cherrypy.HTTPError(404, "No available kennels")
+
+    def handle_unlock(self, data):
+        dogID = data.get("dogID")
+        userID = data.get("userID")
+        dog_size = data.get("dog_size")
+        kennelID = data.get("kennelID")
+        code = data.get("unlockCode")
+
+        if kennelID is not None:
+            # Define the order for kennel dimensions
+            dimension_order = {"Small": 0, "Medium": 1, "Large": 2}
+            tmp = {
+                store["StoreID"]: [kennel["ID"], kennel["unlockCode"]]
+                for store in self.settings
+                for kennel in store["Kennels"]
+                if kennel["ID"] == kennelID
+                and dimension_order[kennel["Size"]] >= dimension_order[dog_size]
+                and not kennel["Booked"]
+                and not kennel["Occupied"]
+            }
+            if not tmp:
+                raise cherrypy.HTTPError(
+                    404, "Kennel not compatible with dog size or not available"
+                )
+
+            storeID, kennel_info = list(tmp.items())[0]
+            kennelID, unlockCode = kennel_info
+
+            if unlockCode != code:
+                raise cherrypy.HTTPError(401, "Invalid unlock code")
+
+            reservationID = str(
+                uuid.uuid4()
+            )  # Genera un ID univoco per la prenotazione
+            self.occupy_kennel(storeID, int(kennelID))
+            reservationTime = round(time.time())
+            self.reservations["reservation"].append(
+                {
+                    "userID": userID,
+                    "reservationID": reservationID,
+                    "dogID": dogID,
+                    "kennelID": kennelID,
+                    "storeID": storeID,
+                    "active": True,
                     "timestamp": reservationTime,
                 }
             )
@@ -297,16 +356,16 @@ class ReservationManager:
             raise cherrypy.HTTPError(401, "Authorization token required")
         token = auth_header.split(" ")[1]
         self.verify_token(token)  # Verify the token
+        body = cherrypy.request.body.read()
+        data = json.loads(body)
         if uri[0] == "reserve":
-            body = cherrypy.request.body.read()
-            data = json.loads(body)
             return self.handle_reservation(data)
+        if uri[0] == "unlock":
+            return self.handle_unlock(data)
         if uri[0] == "activate":
             if len(uri) < 2:
                 raise cherrypy.HTTPError(400, "Reservation ID required")
             reservationID = uri[1]
-            body = cherrypy.request.body.read()
-            data = json.loads(body)
             return self.handle_activation(reservationID, data["unlockCode"])
         else:
             raise cherrypy.HTTPError(404, "Endpoint not found")
