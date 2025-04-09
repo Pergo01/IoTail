@@ -52,15 +52,9 @@ class DataAnalysis:
         )
         if response.status_code != 200:
             raise Exception("Failed to get dogs")
-        self.dogs = []
-        for user in response.json():
-            if user["Dogs"]:
-                self.dogs.extend(
-                    [
-                        {**dog, "FirebaseTokens": user["FirebaseTokens"]}
-                        for dog in user["Dogs"]
-                    ]
-                )
+        self.dogs = [
+            dog for user in response.json() for dog in user["Dogs"] if user["Dogs"]
+        ]
 
     def get_reservations(self):
         headers = {
@@ -134,7 +128,7 @@ class DataAnalysis:
                     "Dog is agitated",
                     0,
                 )
-                for token in dog_info["FirebaseTokens"]:
+                for token in reservation["firebaseTokens"]:
                     message = messaging.Message(
                         notification=messaging.Notification(
                             title="Dog is agitated",
@@ -155,7 +149,7 @@ class DataAnalysis:
         breed_id = dog_info.get("BreedID", 0)
         if breed_id != 0:
             breed_info = next(
-                (breed for breed in self.catalog if breed["BreedID"] == breed_id), None
+                (breed for breed in self.breeds if breed["BreedID"] == breed_id), None
             )
             if breed_info is None:
                 breed_info = {
@@ -192,7 +186,7 @@ class DataAnalysis:
                 f"Temperature {temperature} is outside ideal range ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
                 0,
             )
-            for token in dog_info["FirebaseTokens"]:
+            for token in reservation["firebaseTokens"]:
                 message = messaging.Message(
                     notification=messaging.Notification(
                         title="Temperature not ideal",
@@ -218,7 +212,7 @@ class DataAnalysis:
                 f"Humidity {humidity} is outside ideal range ({breed_info['MinIdealHumidity']}%-{breed_info['MaxIdealHumidity']}%)",
                 0,
             )
-            for token in dog_info["FirebaseTokens"]:
+            for token in reservation["firebaseTokens"]:
                 message = messaging.Message(
                     notification=messaging.Notification(
                         title="Humidity not ideal",

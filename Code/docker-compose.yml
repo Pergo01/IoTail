@@ -88,6 +88,7 @@ services:
       - ./secret_key.txt:/app/secret_key.txt
       - ./Libraries:/app/Libraries
       - ./mqtt_settings.json:/app/mqtt_settings.json
+      - ./firebase_account_key.json:/app/firebase_account_key.json
     depends_on:
       - catalog
       - mosquitto

@@ -7,6 +7,8 @@ import requests
 import jwt
 import threading
 from Libraries import Publisher
+import firebase_admin
+from firebase_admin import credentials, messaging, exceptions
 
 
 class ReservationManager:
@@ -23,7 +25,11 @@ class ReservationManager:
         self.baseTopic = baseTopic
         self.client = Publisher(clientID, broker, port, self)
 
-        # Carica le prenotazioni esistenti dal file, se presente
+        if not firebase_admin._apps:  # Ensures Firebase is initialized only once
+            cred = credentials.Certificate("firebase_account_key.json")
+            firebase_admin.initialize_app(cred)
+
+        # Load reservations from file, if present
         try:
             with open(self.reservation_file) as f:
                 self.reservations = json.load(f)
@@ -32,7 +38,7 @@ class ReservationManager:
                     reservation["storeID"], reservation["kennelID"]
                 )  # set reserved kennels as occupied
         except FileNotFoundError:
-            self.reservations = {}
+            self.reservations = {"reservation": []}
 
     def start(self):
         self.client.start()
@@ -50,6 +56,18 @@ class ReservationManager:
     def stop(self):
         self.client.stop()
 
+    def get_user(self, userID):
+        headers = {
+            "Authorization": f"Bearer reservation_manager",
+            "Content-Type": "application/json",
+        }
+        response = requests.get(f"http://catalog:8080/users/{userID}", headers=headers)
+        if response.ok:
+            return response.json()
+        else:
+            print("Couldn't get users")
+            raise cherrypy.HTTPError(404, "User not found")
+
     def get_stores(self):
         headers = {
             "Authorization": f"Bearer reservation_manager",
@@ -59,7 +77,7 @@ class ReservationManager:
         if response.ok:
             self.settings = response.json()
         else:
-            print("Couldn't get list")
+            print("Couldn't get stores")
             exit(1)
 
     def verify_token(self, token):
@@ -124,6 +142,7 @@ class ReservationManager:
                 ),
                 None,
             )
+            user = self.get_user(userID)
             self.reservations["reservation"].append(
                 {
                     "userID": userID,
@@ -133,6 +152,7 @@ class ReservationManager:
                     "storeID": storeID,
                     "active": False,
                     "unlockCode": unlockCode,
+                    "firebaseTokens": user["FirebaseTokens"],
                     "timestamp": reservationTime,
                 }
             )
@@ -183,6 +203,7 @@ class ReservationManager:
                 uuid.uuid4()
             )  # Genera un ID univoco per la prenotazione
             self.occupy_kennel(storeID, int(kennelID))
+            user = self.get_user(userID)
             reservationTime = round(time.time())
             self.reservations["reservation"].append(
                 {
@@ -192,6 +213,7 @@ class ReservationManager:
                     "kennelID": kennelID,
                     "storeID": storeID,
                     "active": True,
+                    "firebaseTokens": user["FirebaseTokens"],
                     "timestamp": reservationTime,
                 }
             )
@@ -348,6 +370,40 @@ class ReservationManager:
                         and not reservation["active"]
                     ):  # 30 minutes passed
                         self.handle_cancellation(reservation["reservationID"])
+                        for token in reservation["firebaseTokens"]:
+                            message = messaging.Message(
+                                notification=messaging.Notification(
+                                    title="Reservation Expired",
+                                    body="Your reservation has expired since 30 minutes passed since its submission.",
+                                ),
+                                token=token,
+                            )
+                            try:
+                                response = messaging.send(message)
+                                print(
+                                    f"Message sent successfully for kennel {reservation['kennelID']}: {response}"
+                                )
+                            except exceptions.FirebaseError as e:
+                                print(f"Error sending message: {e}")
+                    elif (
+                        round(current_time - reservation["timestamp"]) == 1500
+                        and not reservation["active"]
+                    ):  # 25 minutes passed
+                        for token in reservation["firebaseTokens"]:
+                            message = messaging.Message(
+                                notification=messaging.Notification(
+                                    title="Reservation Reminder",
+                                    body="Your reservation will expire in 5 minutes. Activate it soon or it will be canceled.",
+                                ),
+                                token=token,
+                            )
+                            try:
+                                response = messaging.send(message)
+                                print(
+                                    f"Message sent successfully for kennel {reservation['kennelID']}: {response}"
+                                )
+                            except exceptions.FirebaseError as e:
+                                print(f"Error sending message: {e}")
             time.sleep(1)  # Repeat every second
 
     def POST(self, *uri):
