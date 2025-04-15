@@ -24,6 +24,7 @@ class DataAnalysis:
 
         # Dictionary to track the last alert sent for each kennel and alert type
         self.last_alerts = {}
+        self.averages = {}
 
     def get_data(self):
         self.get_breeds()
@@ -144,7 +145,6 @@ class DataAnalysis:
                     except exceptions.FirebaseError as e:
                         print(f"Error sending message: {e}")
             return
-
         # If the message comes from the temperature/humidity sensor
         breed_id = dog_info.get("BreedID", 0)
         if breed_id != 0:
@@ -166,6 +166,7 @@ class DataAnalysis:
                 "MaxIdealHumidity": dog_info.get("MaxIdealHumidity", 80),
             }
 
+        print(self.averages)
         readings = {
             item.get("n", "temp_humid"): item.get("v", False)
             for item in data.get("e", [])
@@ -175,32 +176,6 @@ class DataAnalysis:
         if temperature is None or humidity is None:
             print("Incomplete sensor data:", data)
             return
-
-        # Temperature check
-        if (
-            temperature > breed_info["MaxIdealTemperature"]
-            or temperature < breed_info["MinIdealTemperature"]
-        ) and self.should_send_alert(kennel_id, "temperature"):
-            self.publish(
-                self.baseTopic + f"/kennel{kennel_id}/alert/temperature",
-                f"Temperature {temperature} is outside ideal range ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
-                0,
-            )
-            for token in reservation["firebaseTokens"]:
-                message = messaging.Message(
-                    notification=messaging.Notification(
-                        title="Temperature not ideal",
-                        body=f"Temperature {temperature} is outside ideal range ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
-                    ),
-                    token=token,
-                )
-                try:
-                    response = messaging.send(message)
-                    print(
-                        f"Message sent successfully for kennel {kennel_id}: {response}"
-                    )
-                except exceptions.FirebaseError as e:
-                    print(f"Error sending message: {e}")
 
         # Humidity check
         if (
@@ -217,6 +192,54 @@ class DataAnalysis:
                     notification=messaging.Notification(
                         title="Humidity not ideal",
                         body=f"Humidity {humidity} is outside ideal range ({breed_info['MinIdealHumidity']}%-{breed_info['MaxIdealHumidity']}%)",
+                    ),
+                    token=token,
+                )
+                try:
+                    response = messaging.send(message)
+                    print(
+                        f"Message sent successfully for kennel {kennel_id}: {response}"
+                    )
+                except exceptions.FirebaseError as e:
+                    print(f"Error sending message: {e}")
+
+        # Temperature check
+        if not parts[1] in self.averages.keys():
+            self.averages[parts[1]] = []
+
+        # HI = -8.784695 + 1.61139411 × T + 2.338549 × RH - 0.14611605 × T × RH - 0.012308094 × T² - 0.016424828 × RH² + 0.002211732 × T² × RH + 0.00072546 × T × RH² - 0.000003582 × T² × RH²
+        apparent_temp = (
+            -8.784695
+            + 1.61139411 * temperature
+            + 2.338549 * humidity
+            - 0.14611605 * temperature * humidity
+            - 0.012308094 * temperature**2
+            - 0.016424828 * humidity**2
+            + 0.002211732 * temperature**2 * humidity
+            + 0.00072546 * temperature * humidity**2
+            - 0.000003582 * temperature**2 * humidity
+        )  # Apparent temperature in Celsius (from the Internet)
+        self.averages[parts[1]].append(apparent_temp)
+        if len(self.averages[parts[1]]) < 30:
+            return  # Not enough data to calculate the average over 30 seconds
+        if len(self.averages[parts[1]]) > 30:
+            self.averages[parts[1]].pop(0)
+        avg = sum(self.averages[parts[1]]) / 30
+        print(avg)
+        if (
+            avg > breed_info["MaxIdealTemperature"]
+            or avg < breed_info["MinIdealTemperature"]
+        ) and self.should_send_alert(kennel_id, "temperature"):
+            self.publish(
+                self.baseTopic + f"/kennel{kennel_id}/alert/temperature",
+                f"Temperature {temperature} is outside ideal range ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
+                0,
+            )
+            for token in reservation["firebaseTokens"]:
+                message = messaging.Message(
+                    notification=messaging.Notification(
+                        title="Temperature not ideal",
+                        body=f"Temperature {temperature} is outside ideal range ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
                     ),
                     token=token,
                 )

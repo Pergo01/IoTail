@@ -6,7 +6,7 @@ import cherrypy
 import requests
 import jwt
 import threading
-from Libraries import Publisher
+from Libraries import PublisherSubscriber
 import firebase_admin
 from firebase_admin import credentials, messaging, exceptions
 
@@ -23,7 +23,8 @@ class ReservationManager:
         self.broker = broker
         self.port = port
         self.baseTopic = baseTopic
-        self.client = Publisher(clientID, broker, port, self)
+        self.client = PublisherSubscriber(clientID, broker, port, self)
+        self.pending_reservations = []
 
         if not firebase_admin._apps:  # Ensures Firebase is initialized only once
             cred = credentials.Certificate("firebase_account_key.json")
@@ -50,11 +51,27 @@ class ReservationManager:
                 )  # SHOULD BE f"kennel{kennel["ID"]}/leds/greenled" but we have just one led
         time.sleep(1)
 
+    def subscribe(self, topic, QoS):
+        self.client.subscribe(topic, QoS)
+
     def publish(self, topic, message, QoS):
         self.client.publish(topic, message, QoS)
 
     def stop(self):
         self.client.stop()
+
+    def notify(self, topic, msg):
+        data = json.loads(msg)
+        kennelID = int(topic.split("/")[1].replace("kennel", ""))
+        reservation = next(
+            (res for res in self.pending_reservations if (res["kennelID"]) == kennelID),
+            None,
+        )
+        status = data.get("message")
+        if reservation and status == "disinfected":
+            self.free_kennel(reservation["storeID"], reservation["kennelID"])
+            self.pending_reservations.remove(reservation)
+            self.get_stores()
 
     def get_user(self, userID):
         headers = {
@@ -240,10 +257,25 @@ class ReservationManager:
             None,
         )
         if reservation:
-            self.free_kennel(reservation["storeID"], reservation["kennelID"])
             self.reservations["reservation"].remove(reservation)
             self.save_reservations()
-            self.get_stores()
+            message = {"message": "off"}
+            self.publish(
+                self.baseTopic + "/kennel1/leds/redled", message, 2
+            )  # SHOULD BE f"kennel{kennelID}/leds/redled" but we have just one led per color
+            if reservation["active"]:
+                self.pending_reservations.append(reservation)
+                message = {"message": "on"}
+                self.publish(
+                    self.baseTopic + "/kennel1/leds/yellowled", message, 2
+                )  # SHOULD BE f"kennel{kennelID}/leds/yellowled" but we have just one led per color
+                self.publish(
+                    self.baseTopic + f"/kennel{reservation['kennelID']}/disinfect",
+                    message,
+                    2,
+                )
+            else:
+                self.free_kennel(reservation["storeID"], reservation["kennelID"])
             return json.dumps(
                 {
                     "status": "cancelled",
@@ -327,13 +359,10 @@ class ReservationManager:
             self.publish(
                 self.baseTopic + "/kennel1/leds/yellowled", message, 2
             )  # SHOULD BE "kennel{kennelID}/leds/yellowled" but we have just one led per color
-            self.publish(
-                self.baseTopic + "/kennel1/leds/redled", message, 2
-            )  # SHOULD BE "kennel{kennelID}/leds/redled" but we have just one led per color
             message = {"message": "on"}
             self.publish(
                 self.baseTopic + "/kennel1/leds/greenled", message, 2
-            )  # SHOULD BE "kennel{kennelID}/leds/greenled" but we have just one led per color
+            )  # SHOULD BE f"kennel{kennelID}/leds/greenled" but we have just one led per color
             return json.loads(response.text)
         raise cherrypy.HTTPError(500, "Error unlocking kennel")
 
@@ -350,6 +379,9 @@ class ReservationManager:
         )
         if response.ok:
             message = {"message": "off"}
+            self.publish(
+                self.baseTopic + "/kennel1/leds/greenled", message, 2
+            )  # SHOULD BE "kennel{kennelID}/leds/greenled" but we have just one led per color
             self.publish(
                 self.baseTopic + "/kennel1/leds/yellowled", message, 2
             )  # SHOULD BE "kennel{kennelID}/leds/yellowled" but we have just one led per color
@@ -491,5 +523,6 @@ if __name__ == "__main__":
     cherrypy.config.update({"server.socket_port": 8083})
     cherrypy.engine.start()
     manager.start()
+    manager.subscribe(settings["baseTopic"] + "/+/status", 2)
     cherrypy.engine.block()
     manager.stop()

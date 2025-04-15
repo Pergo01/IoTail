@@ -114,9 +114,13 @@ services:
 
   disinfection_system:
     build: ./disinfection_system
+    environment:
+    - MQTT_HOST=mosquitto
     volumes:
       - ./disinfection_system:/app
       - ./settings.json:/app/settings.json
+      - ./mqtt_settings.json:/app/mqtt_settings.json
+      - ./Libraries:/app/Libraries
     depends_on:
       - catalog
       - mosquitto
