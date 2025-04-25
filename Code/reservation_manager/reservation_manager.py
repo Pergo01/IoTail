@@ -170,7 +170,8 @@ class ReservationManager:
                     "active": False,
                     "unlockCode": unlockCode,
                     "firebaseTokens": user["FirebaseTokens"],
-                    "timestamp": reservationTime,
+                    "reservationTime": reservationTime,
+                    "activationTime": None,
                 }
             )
             self.save_reservations()
@@ -231,7 +232,8 @@ class ReservationManager:
                     "storeID": storeID,
                     "active": True,
                     "firebaseTokens": user["FirebaseTokens"],
-                    "timestamp": reservationTime,
+                    "reservationTime": reservationTime,
+                    "activationTime": reservationTime,
                 }
             )
             self.save_reservations()
@@ -304,6 +306,7 @@ class ReservationManager:
                 raise cherrypy.HTTPError(status=401, message="Invalid unlock code")
             self.occupy_kennel(reservation["storeID"], reservation["kennelID"])
             reservation["active"] = True
+            reservation["activationTime"] = round(time.time())
             self.save_reservations()
             self.get_stores()
             return json.dumps(
@@ -398,7 +401,7 @@ class ReservationManager:
             if self.reservations:
                 for reservation in self.reservations["reservation"]:
                     if (
-                        current_time - reservation["timestamp"] > 1800
+                        current_time - reservation["reservationTime"] > 1800
                         and not reservation["active"]
                     ):  # 30 minutes passed
                         self.handle_cancellation(reservation["reservationID"])
@@ -418,7 +421,7 @@ class ReservationManager:
                             except exceptions.FirebaseError as e:
                                 print(f"Error sending message: {e}")
                     elif (
-                        round(current_time - reservation["timestamp"]) == 1500
+                        round(current_time - reservation["reservationTime"]) == 1500
                         and not reservation["active"]
                     ):  # 25 minutes passed
                         for token in reservation["firebaseTokens"]:
