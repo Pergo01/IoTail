@@ -126,7 +126,10 @@
             "MeasureType": "Temperature",
             "MeasureUnit": "C",
             "Measurements": [],
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         },
         {
@@ -135,7 +138,10 @@
             "MeasureType": "Humidity",
             "MeasureUnit": "%",
             "Measurements": [],
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         },
         {
@@ -144,7 +150,10 @@
             "MeasureType": "Motion",
             "MeasureUnit": "Boolean",
             "Measurements": [],
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         },
         {
@@ -153,7 +162,10 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         },
         {
@@ -162,7 +174,10 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         },
         {
@@ -171,7 +186,10 @@
             "MeasureType": "None",
             "MeasureUnit": "Boolean",
             "Status": "off",
-            "CommunicationParadigm": ["Rest", "MQTT"],
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
             "Availability": true
         }
     ],
@@ -182,7 +200,9 @@
             "Email": "claudiosulas@example.com",
             "PhoneNumber": "+1234567890",
             "ProfilePicture": null,
-            "FirebaseTokens": ["jajfaekqkakoeafakpocmajiq03q9r37qyhd"],
+            "FirebaseTokens": [
+                "jajfaekqkakoeafakpocmajiq03q9r37qyhd"
+            ],
             "Dogs": [
                 {
                     "DogID": "oafjfahiuafduj12oieqo0310445",
@@ -193,7 +213,9 @@
                     "Size": "Large",
                     "Weight": 37,
                     "CoatType": "Medium",
-                    "Allergies": ["Pollen"],
+                    "Allergies": [
+                        "Pollen"
+                    ],
                     "Picture": null
                 }
             ]
@@ -205,7 +227,11 @@
             "Password": "$2b$12$Bl5h/GhsMVEV5caFrJaiweINUpz2Ya9o3FHmSqS.C5XmrdrzsYxFa",
             "PhoneNumber": "+123456789",
             "ProfilePicture": null,
-            "FirebaseTokens": [],
+            "FirebaseTokens": [
+                "fTUpeIesS7qeQazYOeHFVF:APA91bGa-tiSp5ZurpWKhrR5Wf1q7Z3-_zXvlLuF2UAgWO7nCRcef0PbemICPqdzs7x7AuIxniiyOE9EL8_NOu9MFFd1xxfpYdUtQcoz3SxVM8q-4LIQ9o8",
+                "fG_0Yxn0QWm9LZAj-JrgrE:APA91bEVW8AchzzPT1Jsg0VHJv-AAGnA5l3P_oXkIgFI-XUO-6LoLMegXSl1oiV7MVaDpnYokXBeBcq1G1P7iSdwa6C0aUDc3km13cJj45aUrUOA4u4qNhI",
+                "dlO0vp4jQKWhupaJ307BK0:APA91bEPaIJ3xrTYS8JDTighio9MsIRAPDKniJ6_4vz2QX2gV87M_oLyGWkaNkEKwi5aOwcGTljWVpzhi7xdiscjzZyHV37KZ3bYKfY_BSnMNXDJ-kT-9vs"
+            ],
             "Dogs": [
                 {
                     "Name": "Fuffi",
@@ -215,7 +241,9 @@
                     "Size": "Large",
                     "Weight": 20.0,
                     "CoatType": "Medium",
-                    "Allergies": ["Pollen"],
+                    "Allergies": [
+                        "Pollen"
+                    ],
                     "DogID": "fa505dab-aa21-42c1-b3b6-0fc6ba18e145",
                     "Picture": null
                 }
@@ -236,252 +264,279 @@
         {
             "StoreID": 0,
             "Name": "Carrefour",
-            "Location": [44.8837, 7.3007],
+            "Location": [
+                44.8837,
+                7.3007
+            ],
             "Kennels": [
                 {
                     "ID": 0,
                     "Size": "Small",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 5674
+                    "UnlockCode": 5674
                 },
                 {
                     "ID": 1,
                     "Size": "Large",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 9821
+                    "UnlockCode": 9821
                 },
                 {
                     "ID": 2,
                     "Size": "Medium",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 1439
+                    "UnlockCode": 1439
                 }
             ]
         },
         {
             "StoreID": 1,
             "Name": "Carrefour Market",
-            "Location": [44.8776, 7.3322],
+            "Location": [
+                44.8776,
+                7.3322
+            ],
             "Kennels": [
                 {
                     "ID": 3,
                     "Size": "Small",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 2736
+                    "UnlockCode": 2736
                 },
                 {
                     "ID": 4,
                     "Size": "Large",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 5918
+                    "UnlockCode": 5918
                 },
                 {
                     "ID": 5,
                     "Size": "Medium",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 8042
+                    "UnlockCode": 8042
                 }
             ]
         },
         {
             "StoreID": 2,
             "Name": "Unieuro",
-            "Location": [44.8835, 7.3017],
+            "Location": [
+                44.8835,
+                7.3017
+            ],
             "Kennels": [
                 {
                     "ID": 6,
                     "Size": "Small",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 3694
+                    "UnlockCode": 3694
                 },
                 {
                     "ID": 7,
                     "Size": "Large",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 1278
+                    "UnlockCode": 1278
                 },
                 {
                     "ID": 8,
                     "Size": "Medium",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 8427
+                    "UnlockCode": 8427
                 }
             ]
         },
         {
             "StoreID": 3,
             "Name": "Expert Chiale",
-            "Location": [44.8855, 7.3051],
+            "Location": [
+                44.8855,
+                7.3051
+            ],
             "Kennels": [
                 {
                     "ID": 9,
                     "Size": "Small",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 6501
+                    "UnlockCode": 6501
                 },
                 {
                     "ID": 10,
                     "Size": "Large",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 9382
+                    "UnlockCode": 9382
                 },
                 {
                     "ID": 11,
                     "Size": "Medium",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 1046
+                    "UnlockCode": 1046
                 }
             ]
         },
         {
             "StoreID": 4,
             "Name": "Eurospin",
-            "Location": [44.882, 7.3165],
+            "Location": [
+                44.882,
+                7.3165
+            ],
             "Kennels": [
                 {
                     "ID": 12,
                     "Size": "Small",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 4581
+                    "UnlockCode": 4581
                 },
                 {
                     "ID": 13,
                     "Size": "Large",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 7912
+                    "UnlockCode": 7912
                 },
                 {
                     "ID": 14,
                     "Size": "Medium",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 6205
+                    "UnlockCode": 6205
                 }
             ]
         },
         {
             "StoreID": 5,
             "Name": "Conad",
-            "Location": [44.8864, 7.3385],
+            "Location": [
+                44.8864,
+                7.3385
+            ],
             "Kennels": [
                 {
                     "ID": 15,
                     "Size": "Small",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 3698
+                    "UnlockCode": 3698
                 },
                 {
                     "ID": 16,
                     "Size": "Large",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 1472
+                    "UnlockCode": 1472
                 },
                 {
                     "ID": 17,
                     "Size": "Medium",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 9530
+                    "UnlockCode": 9530
                 }
             ]
         },
         {
             "StoreID": 6,
             "Name": "Carrefour Express",
-            "Location": [44.8848, 7.3352],
+            "Location": [
+                44.8848,
+                7.3352
+            ],
             "Kennels": [
                 {
                     "ID": 18,
                     "Size": "Small",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 2874
+                    "UnlockCode": 2874
                 },
                 {
                     "ID": 19,
                     "Size": "Large",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 5762
+                    "UnlockCode": 5762
                 },
                 {
                     "ID": 20,
                     "Size": "Medium",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 9213
+                    "UnlockCode": 9213
                 }
             ]
         },
         {
             "StoreID": 7,
             "Name": "Le Due Valli",
-            "Location": [44.8838, 7.3531],
+            "Location": [
+                44.8838,
+                7.3531
+            ],
             "Kennels": [
                 {
                     "ID": 21,
                     "Size": "Small",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 6540
+                    "UnlockCode": 6540
                 },
                 {
                     "ID": 22,
                     "Size": "Large",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 3981
+                    "UnlockCode": 3981
                 },
                 {
                     "ID": 23,
                     "Size": "Medium",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 7129
+                    "UnlockCode": 7129
                 }
             ]
         },
         {
             "StoreID": 8,
             "Name": "Lidl",
-            "Location": [44.8888, 7.3542],
+            "Location": [
+                44.8888,
+                7.3542
+            ],
             "Kennels": [
                 {
                     "ID": 24,
                     "Size": "Small",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 8053
+                    "UnlockCode": 8053
                 },
                 {
                     "ID": 25,
                     "Size": "Large",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 1462
+                    "UnlockCode": 1462
                 },
                 {
                     "ID": 26,
                     "Size": "Medium",
                     "Booked": false,
                     "Occupied": false,
-                    "unlockCode": 2308
+                    "UnlockCode": 2308
                 }
             ]
         }

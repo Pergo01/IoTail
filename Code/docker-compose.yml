@@ -11,7 +11,7 @@ services:
       - ./secret_key.txt:/app/secret_key.txt
     depends_on:
       - mosquitto
-    restart: always
+    restart: unless-stopped
     networks:
       - iotail_network
 
@@ -33,7 +33,7 @@ services:
     depends_on:
       - catalog
       - mosquitto
-    restart: always
+    restart: unless-stopped
     networks:
       - iotail_network
 
@@ -53,7 +53,7 @@ services:
     depends_on:
       - catalog
       - mosquitto
-    restart: always
+    restart: unless-stopped
     networks:
       - iotail_network 
 
@@ -71,7 +71,7 @@ services:
       - catalog
       - reservation_manager
       - mosquitto
-    restart: always
+    restart: unless-stopped
     networks:
       - iotail_network
 
@@ -92,7 +92,7 @@ services:
     depends_on:
       - catalog
       - mosquitto
-    restart: always
+    restart: unless-stopped
     networks:
       - iotail_network
 
@@ -108,7 +108,7 @@ services:
     depends_on:
       - catalog
       - mosquitto
-    restart: always
+    restart: unless-stopped
     networks:
       - iotail_network
 
@@ -124,7 +124,7 @@ services:
     depends_on:
       - catalog
       - mosquitto
-    restart: always
+    restart: unless-stopped
     networks:
       - iotail_network
 
@@ -140,7 +140,7 @@ services:
       sh -c "npm install node-red-dashboard &&
              npm install node-red-node-ui-table &&
              node-red"
-    restart: always
+    restart: unless-stopped
     networks:
       - iotail_network
 

@@ -2,6 +2,7 @@ import json
 import requests
 from Libraries import Subscriber
 import time
+import signal
 
 
 class ThingspeakAdaptor:
@@ -15,13 +16,11 @@ class ThingspeakAdaptor:
         self.client = Subscriber(clientID, broker, port, self)
 
         self.catalog_url = self.settings["catalog_url"]
-        self.thingspeak_api_key = self.settings["thingspeak_api_key"]
+        self.thingspeak_write_api_key = self.settings["thingspeak_write_api_key"]
+        self.thingspeak_read_api_key = self.settings["thingspeak_read_api_key"]
         self.thingspeak_url = (
-            f"https://api.thingspeak.com/update?api_key={self.thingspeak_api_key}"
+            f"https://api.thingspeak.com/update?api_key={self.thingspeak_write_api_key}"
         )
-
-        # Dizionario per tenere traccia dei valori più recenti
-        self.latest_values = {"temperature": None, "humidity": None, "motion": None}
 
     def start(self):
         self.client.start()
@@ -31,26 +30,30 @@ class ThingspeakAdaptor:
         self.client.subscribe(topic, QoS)
 
     def notify(self, topic, msg):
+        kennelID = int(topic.split("/")[1].replace("kennel", ""))
         try:
             data = json.loads(msg)
+            measurements = {}
             if "e" in data:
+                measurements["kennelID"] = kennelID
                 for entry in data["e"]:
                     if entry["n"] == "temperature":
-                        self.latest_values["temperature"] = entry["v"]
+                        measurements["temperature"] = entry["v"]
                     elif entry["n"] == "humidity":
-                        self.latest_values["humidity"] = entry["v"]
+                        measurements["humidity"] = entry["v"]
                     elif entry["n"] == "motion":
-                        self.latest_values["motion"] = 1 if entry["v"] else 0
+                        measurements["motion"] = 1 if entry["v"] else 0
 
-                self.send_to_thingspeak()
+                self.send_to_thingspeak(measurements)
         except json.JSONDecodeError:
             print(f"Failed to parse message: {msg.payload.decode()}")
 
-    def send_to_thingspeak(self):
+    def send_to_thingspeak(self, measurements):
         payload = {
-            "field1": self.latest_values["temperature"],
-            "field2": self.latest_values["humidity"],
-            "field3": self.latest_values["motion"],
+            "field1": measurements.get("temperature", None),
+            "field2": measurements.get("humidity", None),
+            "field3": measurements.get("motion", None),
+            "field4": measurements.get("kennelID", None),
         }
 
         # Invia solo i campi che hanno un valore
@@ -66,16 +69,22 @@ class ThingspeakAdaptor:
         self.client.stop()
 
 
+def signal_handler(sig, frame):
+    # Handles Ctrl+C signals to gracefully stop data_analysis process
+    print("\nStopping MQTT Thingspeak adaptor service...")
+    adaptor.stop()
+
+
 if __name__ == "__main__":
     settings = json.load(open("mqtt_settings.json"))
     adaptor = ThingspeakAdaptor(
         "ThingspeakAdaptor", settings["broker"], settings["port"]
     )
+
     adaptor.start()
     adaptor.subscribe(settings["baseTopic"] + "/+/sensors/#", 0)
-    while True:
-        try:
-            time.sleep(1)
-        except KeyboardInterrupt:
-            break
-    adaptor.stop()
+    # Waits for keyboard interruption
+    signal.signal(signal.SIGINT, signal_handler)
+
+    # Keeps the program running
+    signal.pause()

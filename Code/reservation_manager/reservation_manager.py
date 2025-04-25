@@ -153,7 +153,7 @@ class ReservationManager:
             reservationTime = round(time.time())
             unlockCode = next(
                 (
-                    kennel["unlockCode"]
+                    kennel["UnlockCode"]
                     for kennel in store["Kennels"]
                     if kennel["ID"] == kennelID
                 ),
@@ -197,7 +197,7 @@ class ReservationManager:
             # Define the order for kennel dimensions
             dimension_order = {"Small": 0, "Medium": 1, "Large": 2}
             tmp = {
-                store["StoreID"]: [kennel["ID"], kennel["unlockCode"]]
+                store["StoreID"]: [kennel["ID"], kennel["UnlockCode"]]
                 for store in self.settings
                 for kennel in store["Kennels"]
                 if kennel["ID"] == kennelID
