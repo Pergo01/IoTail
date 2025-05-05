@@ -2,17 +2,19 @@ import json
 import time
 from Libraries import PublisherSubscriber
 import signal
+import requests
+import threading
 
 
 class DisinfectionSystem:
-    def __init__(self, clientID, broker, port, baseTopic):
-        self.settings = json.load(open("settings.json"))
+    def __init__(self, clientID, broker, port, baseTopic, serviceID):
         self.broker = broker
         self.port = port
         self.baseTopic = baseTopic
         self.clientID = clientID
+        self.serviceID = serviceID
         self.client = PublisherSubscriber(clientID, broker, port, self)
-        self.catalog_url = self.settings["catalog_url"]
+        self.catalog_url = json.load(open("settings.json"))["catalog_url"]
 
     def start(self):
         self.client.start()
@@ -43,6 +45,27 @@ class DisinfectionSystem:
             2,
         )
 
+    def heartbeat(self):
+        while True:
+            try:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer disinfection_system",
+                }
+                url = self.catalog_url + "/heartbeat"
+                payload = {
+                    "category": "service",
+                    "serviceID": self.serviceID,
+                }
+                response = requests.post(url, headers=headers, data=json.dumps(payload))
+                if response.status_code == 200:
+                    print("Heartbeat sent successfully")
+                else:
+                    print("Failed to send heartbeat")
+            except requests.exceptions.RequestException as e:
+                print(f"Error sending heartbeat: {e}")
+            time.sleep(60)
+
 
 def signal_handler(sig, frame):
     # Handles Ctrl+C signals to gracefully stop data_analysis process
@@ -57,8 +80,14 @@ if __name__ == "__main__":
         settings["broker"],
         settings["port"],
         settings["baseTopic"],
+        3,
     )
     disinfection_system.start()
+
+    heartbeat_thread = threading.Thread(target=disinfection_system.heartbeat)
+    heartbeat_thread.daemon = True  # The thread will terminate when the program ends
+    heartbeat_thread.start()
+
     disinfection_system.subscribe(settings["baseTopic"] + "/+/disinfect", 2)
     # Waits for keyboard interruption
     signal.signal(signal.SIGINT, signal_handler)

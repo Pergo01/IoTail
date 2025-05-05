@@ -3,14 +3,16 @@ import requests
 from Libraries import Subscriber
 import time
 import signal
+import threading
 
 
 class ThingspeakAdaptor:
-    def __init__(self, clientID, broker, port):
+    def __init__(self, clientID, broker, port, serviceID):
         with open("settings.json") as f:
             self.settings = json.load(f)
 
         self.clientID = clientID
+        self.serviceID = serviceID
         self.broker = broker
         self.port = port
         self.client = Subscriber(clientID, broker, port, self)
@@ -68,6 +70,27 @@ class ThingspeakAdaptor:
     def stop(self):
         self.client.stop()
 
+    def heartbeat(self):
+        while True:
+            try:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer thingspeak_adaptor",
+                }
+                url = self.catalog_url + "/heartbeat"
+                payload = {
+                    "category": "service",
+                    "serviceID": self.serviceID,
+                }
+                response = requests.post(url, headers=headers, data=json.dumps(payload))
+                if response.status_code == 200:
+                    print("Heartbeat sent successfully")
+                else:
+                    print("Failed to send heartbeat")
+            except requests.exceptions.RequestException as e:
+                print(f"Error sending heartbeat: {e}")
+            time.sleep(60)
+
 
 def signal_handler(sig, frame):
     # Handles Ctrl+C signals to gracefully stop data_analysis process
@@ -78,11 +101,17 @@ def signal_handler(sig, frame):
 if __name__ == "__main__":
     settings = json.load(open("mqtt_settings.json"))
     adaptor = ThingspeakAdaptor(
-        "ThingspeakAdaptor", settings["broker"], settings["port"]
+        "ThingspeakAdaptor", settings["broker"], settings["port"], 4
     )
 
     adaptor.start()
+
+    heartbeat_thread = threading.Thread(target=adaptor.heartbeat)
+    heartbeat_thread.daemon = True  # The thread will terminate when the program ends
+    heartbeat_thread.start()
+
     adaptor.subscribe(settings["baseTopic"] + "/+/sensors/#", 0)
+
     # Waits for keyboard interruption
     signal.signal(signal.SIGINT, signal_handler)
 

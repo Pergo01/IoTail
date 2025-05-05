@@ -8,3 +8,4 @@ lgpio==0.2.2.0
 pyserial==3.5
 adafruit_blinka
 adafruit-circuitpython-dht
+requests==2.26.0

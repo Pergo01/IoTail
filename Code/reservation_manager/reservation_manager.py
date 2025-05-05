@@ -14,12 +14,14 @@ from firebase_admin import credentials, messaging, exceptions
 class ReservationManager:
     exposed = True
 
-    def __init__(self, reservation_file, clientID, broker, port, baseTopic):
+    def __init__(self, reservation_file, clientID, broker, port, baseTopic, serviceID):
         with open("secret_key.txt") as f:
             self.secret_key = f.read()
+        self.catalog_url = json.load(open("settings.json"))["catalog_url"]
         self.get_stores()
         self.reservation_file = reservation_file
         self.clientID = clientID
+        self.serviceID = serviceID
         self.broker = broker
         self.port = port
         self.baseTopic = baseTopic
@@ -35,9 +37,14 @@ class ReservationManager:
             with open(self.reservation_file) as f:
                 self.reservations = json.load(f)
             for reservation in self.reservations["reservation"]:
-                self.occupy_kennel(
-                    reservation["storeID"], reservation["kennelID"]
-                )  # set reserved kennels as occupied
+                if reservation["active"]:
+                    self.occupy_kennel(
+                        reservation["storeID"], reservation["kennelID"]
+                    )  # set reserved kennels as occupied
+                else:
+                    self.book_kennel(
+                        reservation["storeID"], reservation["kennelID"]
+                    )  # set reserved kennels as locked
         except FileNotFoundError:
             self.reservations = {"reservation": []}
 
@@ -78,7 +85,7 @@ class ReservationManager:
             "Authorization": f"Bearer reservation_manager",
             "Content-Type": "application/json",
         }
-        response = requests.get(f"http://catalog:8080/users/{userID}", headers=headers)
+        response = requests.get(f"{self.catalog_url}/users/{userID}", headers=headers)
         if response.ok:
             return response.json()
         else:
@@ -90,7 +97,7 @@ class ReservationManager:
             "Authorization": f"Bearer reservation_manager",
             "Content-Type": "application/json",
         }
-        response = requests.get(f"http://catalog:8080/stores", headers=headers)
+        response = requests.get(f"{self.catalog_url}/stores", headers=headers)
         if response.ok:
             self.settings = response.json()
         else:
@@ -330,7 +337,7 @@ class ReservationManager:
         }
         body = json.dumps({"storeID": storeID, "kennel": kennel})
         response = requests.post(
-            f"http://catalog:8080/book",
+            f"{self.catalog_url}/book",
             headers=headers,
             data=body,
         )
@@ -353,7 +360,7 @@ class ReservationManager:
         }
         body = json.dumps({"storeID": storeID, "kennel": kennel})
         response = requests.post(
-            f"http://catalog:8080/free",
+            f"{self.catalog_url}/free",
             headers=headers,
             data=body,
         )
@@ -376,7 +383,7 @@ class ReservationManager:
         }
         body = json.dumps({"storeID": storeID, "kennel": kennel})
         response = requests.post(
-            f"http://catalog:8080/lock",
+            f"{self.catalog_url}/lock",
             headers=headers,
             data=body,
         )
@@ -491,6 +498,27 @@ class ReservationManager:
         else:
             raise cherrypy.HTTPError(404, "Endpoint not found")
 
+    def heartbeat(self):
+        while True:
+            try:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer reservation_manager",
+                }
+                url = self.catalog_url + "/heartbeat"
+                payload = {
+                    "category": "service",
+                    "serviceID": self.serviceID,
+                }
+                response = requests.post(url, headers=headers, data=json.dumps(payload))
+                if response.status_code == 200:
+                    print("Heartbeat sent successfully")
+                else:
+                    print("Failed to send heartbeat")
+            except requests.exceptions.RequestException as e:
+                print(f"Error sending heartbeat: {e}")
+            time.sleep(60)
+
 
 if __name__ == "__main__":
     # Load settings and initialize the manager
@@ -501,6 +529,7 @@ if __name__ == "__main__":
         settings["broker"],
         settings["port"],
         settings["baseTopic"],
+        1,
     )
 
     # Determine the local IP address
@@ -520,6 +549,10 @@ if __name__ == "__main__":
     check_expiry_thread = threading.Thread(target=manager.check_expiry)
     check_expiry_thread.daemon = True  # Il thread terminerà quando il programma termina
     check_expiry_thread.start()
+
+    heartbeat_thread = threading.Thread(target=manager.heartbeat)
+    heartbeat_thread.daemon = True  # The thread will terminate when the program ends
+    heartbeat_thread.start()
 
     cherrypy.tree.mount(manager, "/", conf)
     cherrypy.config.update({"server.socket_host": ip})

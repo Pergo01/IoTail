@@ -122,75 +122,120 @@
     "Devices": [
         {
             "DeviceID": 1,
-            "Name": "Temperature Sensor",
-            "MeasureType": "Temperature",
-            "MeasureUnit": "C",
-            "Measurements": [],
+            "Name": "Temperature and Humidity Sensor",
+            "MeasureType": [
+                "Temperature",
+                "Humidity"
+            ],
+            "MeasureUnit": [
+                "C",
+                "%"
+            ],
             "CommunicationParadigm": [
                 "Rest",
                 "MQTT"
             ],
-            "Availability": true
+            "LastAvailable": 38133149143,
+            "Available": true
         },
         {
             "DeviceID": 2,
-            "Name": "Humidity Sensor",
-            "MeasureType": "Humidity",
-            "MeasureUnit": "%",
-            "Measurements": [],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
-            "Availability": true
-        },
-        {
-            "DeviceID": 3,
             "Name": "Motion Sensor",
             "MeasureType": "Motion",
             "MeasureUnit": "Boolean",
-            "Measurements": [],
             "CommunicationParadigm": [
                 "Rest",
                 "MQTT"
             ],
-            "Availability": true
+            "LastAvailable": 38133149143,
+            "Available": true
+        },
+        {
+            "DeviceID": 3,
+            "Name": "Red Led",
+            "MeasureType": null,
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
+            "LastAvailable": 38133149143,
+            "Available": true
         },
         {
             "DeviceID": 4,
-            "Name": "Red Led",
-            "MeasureType": "None",
-            "MeasureUnit": "Boolean",
-            "Status": "off",
+            "Name": "Yellow Led",
+            "MeasureType": null,
             "CommunicationParadigm": [
                 "Rest",
                 "MQTT"
             ],
-            "Availability": true
+            "LastAvailable": 38133149143,
+            "Available": true
         },
         {
             "DeviceID": 5,
-            "Name": "Yellow Led",
-            "MeasureType": "None",
-            "MeasureUnit": "Boolean",
-            "Status": "off",
+            "Name": "Green Led",
+            "MeasureType": null,
             "CommunicationParadigm": [
                 "Rest",
                 "MQTT"
             ],
-            "Availability": true
+            "LastAvailable": 38133149143,
+            "Available": true
         },
         {
             "DeviceID": 6,
-            "Name": "Green Led",
-            "MeasureType": "None",
-            "MeasureUnit": "Boolean",
-            "Status": "off",
+            "Name": "Camera",
+            "MeasureType": null,
+            "CommunicationParadigm": "MQTT",
+            "LastAvailable": 38133149143,
+            "Available": true
+        }
+    ],
+    "Services": [
+        {
+            "ServiceID": 1,
+            "Name": "Reservation Manager",
+            "Description": "Manages the reservation of kennels.",
             "CommunicationParadigm": [
                 "Rest",
                 "MQTT"
             ],
-            "Availability": true
+            "LastAvailable": 1746285266.2862597,
+            "Available": true
+        },
+        {
+            "ServiceID": 2,
+            "Name": "Data Analysis",
+            "Description": "Analyzes data from sensors.",
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
+            "LastAvailable": 1746285258.7585983,
+            "Available": true
+        },
+        {
+            "ServiceID": 3,
+            "Name": "Disinfection System",
+            "Description": "Manages the disinfection of kennels.",
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
+            "LastAvailable": 1746285267.2389054,
+            "Available": true
+        },
+        {
+            "ServiceID": 4,
+            "Name": "Thingspeak Adaptor",
+            "Description": "Sends data to Thingspeak.",
+            "CommunicationParadigm": [
+                "Rest",
+                "MQTT"
+            ],
+            "LastAvailable": 1746285267.129073,
+            "Available": true
         }
     ],
     "Users": [

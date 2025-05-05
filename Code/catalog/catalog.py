@@ -13,6 +13,7 @@ import string
 import requests
 import shutil
 from cherrypy.lib import static
+import threading
 
 
 class Catalog:
@@ -37,7 +38,16 @@ class Catalog:
         return token
 
     def verify_token(self, token):
-        if token in ["reservation_manager", "data_analysis"]:
+        if token in [
+            "reservation_manager",
+            "data_analysis",
+            "temp_humid_sensor",
+            "motion_sensor",
+            "led_connector",
+            "camera",
+            "thingspeak_adaptor",
+            "disinfection_system",
+        ]:
             return token
         try:
             decoded = jwt.decode(token, self.secret_key, algorithms=["HS256"])
@@ -630,7 +640,43 @@ class Catalog:
             self.catalog_data["serviceList"].append(json_body)
             self.save_catalog()
             return json.dumps({"status": "success", "message": "Service added"})
-
+        elif uri[0] == "heartbeat":
+            # Handle heartbeat
+            category = json_body.get("category", None)
+            if not category:
+                raise cherrypy.HTTPError(400, "Category is required")
+            if category == "sensor":
+                device_id = json_body["deviceID"]
+                device = next(
+                    (
+                        d
+                        for d in self.catalog_data["Devices"]
+                        if d["DeviceID"] == device_id
+                    ),
+                    None,
+                )
+                if not device:
+                    raise cherrypy.HTTPError(404, "Device not found")
+                device["LastAvailable"] = time.time()
+                device["Available"] = True
+            elif category == "service":
+                service_id = json_body["serviceID"]
+                service = next(
+                    (
+                        s
+                        for s in self.catalog_data["Services"]
+                        if s["ServiceID"] == service_id
+                    ),
+                    None,
+                )
+                if not service:
+                    raise cherrypy.HTTPError(404, "Service not found")
+                service["LastAvailable"] = time.time()
+                service["Available"] = True
+            else:
+                raise cherrypy.HTTPError(400, "Invalid category")
+            self.save_catalog()
+            return json.dumps({"status": "success", "message": "Heartbeat received"})
         else:
             raise cherrypy.HTTPError(400, "Bad request")
 
@@ -824,12 +870,27 @@ class Catalog:
         self.save_catalog()
         return "200 OK"
 
+    def check_availability(self):
+        while True:
+            now = time.time()
+            # Check availability of devices and services
+            # We give 3 minutes of tolerance
+            for device in self.catalog_data["Devices"]:
+                if now - device["LastAvailable"] > 180:
+                    device["Available"] = False
+            for service in self.catalog_data["Services"]:
+                if now - service["LastAvailable"] > 180:
+                    service["Available"] = False
+            self.save_catalog()
+            time.sleep(10)
+
 
 if __name__ == "__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     ip = s.getsockname()[0]
     s.close()
+    catalog = Catalog()
     conf = {
         "/": {
             "request.dispatch": cherrypy.dispatch.MethodDispatcher(),
@@ -837,8 +898,15 @@ if __name__ == "__main__":
             "request.show_tracebacks": False,
         }
     }
-    cherrypy.tree.mount(Catalog(), "/", conf)
+    cherrypy.tree.mount(catalog, "/", conf)
     cherrypy.config.update({"server.socket_host": ip})
     cherrypy.config.update({"server.socket_port": 8080})
+
+    check_heartbeat_thread = threading.Thread(target=catalog.check_availability)
+    check_heartbeat_thread.daemon = (
+        True  # The thread will terminate when the program ends
+    )
+    check_heartbeat_thread.start()
+
     cherrypy.engine.start()
     cherrypy.engine.block()

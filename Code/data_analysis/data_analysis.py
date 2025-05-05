@@ -9,8 +9,9 @@ from firebase_admin import credentials, messaging, exceptions
 
 
 class DataAnalysis:
-    def __init__(self, clientID, broker, port, baseTopic):
+    def __init__(self, clientID, broker, port, baseTopic, serviceID):
         self.clientID = clientID
+        self.serviceID = serviceID
         self.broker = broker
         self.port = port
         self.baseTopic = baseTopic
@@ -261,7 +262,27 @@ class DataAnalysis:
     def refresh(self):
         while True:
             self.get_data()
+            self.heartbeat()
             time.sleep(60)
+
+    def heartbeat(self):
+        try:
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer data_analysis",
+            }
+            url = self.catalog_url + "/heartbeat"
+            payload = {
+                "category": "service",
+                "serviceID": self.serviceID,
+            }
+            response = requests.post(url, headers=headers, data=json.dumps(payload))
+            if response.status_code == 200:
+                print("Heartbeat sent successfully")
+            else:
+                print("Failed to send heartbeat")
+        except requests.exceptions.RequestException as e:
+            print(f"Error sending heartbeat: {e}")
 
 
 def signal_handler(sig, frame):
@@ -273,7 +294,7 @@ def signal_handler(sig, frame):
 if __name__ == "__main__":
     settings = json.load(open("mqtt_settings.json"))
     analysis = DataAnalysis(
-        "DataAnalysis", settings["broker"], settings["port"], settings["baseTopic"]
+        "DataAnalysis", settings["broker"], settings["port"], settings["baseTopic"], 2
     )
 
     refresh_thread = threading.Thread(target=analysis.refresh)
