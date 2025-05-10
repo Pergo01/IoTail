@@ -70,6 +70,7 @@ class Catalog:
                 "Dogs": [],
                 "Kennels": [],
                 "Bookings": [],
+                "Services": [],
             }
 
     def save_catalog(self):
@@ -500,9 +501,12 @@ class Catalog:
     def GET(self, *uri, **params):
         auth_header = cherrypy.request.headers.get("Authorization")
         if not auth_header:
-            raise cherrypy.HTTPError(401, "Authorization token required")
-        token = auth_header.split(" ")[1]
-        self.verify_token(token)  # Verify the token
+            # Allow access to status_page without token for simplicity, or add specific token check
+            if not (len(uri) > 0 and uri[0] == "status_page"):
+                raise cherrypy.HTTPError(401, "Authorization token required")
+        else:
+            token = auth_header.split(" ")[1]
+            self.verify_token(token)  # Verify the token for other routes
 
         if len(uri) == 0:
             return json.dumps(self.catalog_data)
@@ -511,7 +515,9 @@ class Catalog:
         elif uri[0] == "devices":
             return json.dumps(self.catalog_data["Devices"])
         elif uri[0] == "services":
-            return json.dumps(self.catalog_data["serviceList"])
+            return json.dumps(
+                self.catalog_data.get("Services", [])
+            )  # Modificato da serviceList a Services
         elif uri[0] == "stores":
             return json.dumps(self.catalog_data["Stores"])
         elif uri[0] == "breeds":
@@ -569,6 +575,77 @@ class Catalog:
                 disposition="attachment",
                 name=dog["Picture"].split("/")[-1],
             )
+        elif uri[0] == "status_page":
+            cherrypy.response.headers["Content-Type"] = "text/html"
+            html = """
+            <html>
+            <head>
+                <title>Status Page</title>
+                <style>
+                    .status-circle {
+                        height: 15px;
+                        width: 15px;
+                        border-radius: 50%;
+                        display: inline-block;
+                        margin-right: 10px;
+                    }
+                    .green { background-color: green; }
+                    .red { background-color: red; }
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    h1 { color: #333; }
+                    h2 { color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px;}
+                    ul { list-style-type: none; padding-left: 0; }
+                    li { margin-bottom: 8px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; background-color: #f9f9f9; display: flex; align-items: center;}
+                    .details { margin-left: 10px; }
+                </style>
+
+            </head>
+            <body>
+                <h1>System Status</h1>
+            """
+
+            html += "<h2>Devices</h2><ul>"
+            if "Devices" in self.catalog_data and self.catalog_data["Devices"]:
+                for device in self.catalog_data["Devices"]:
+                    device_id = device.get("DeviceID", "N/A")
+                    device_name = device.get("Name", f"DefaultNameForID_{device_id}")
+                    available_status = device.get("Available", False)
+
+                    status_color = "green" if available_status else "red"
+                    html += f"""<li>
+                                    <span class='status-circle {status_color}'></span>
+                                    <div class='details'>
+                                        ID: {device_id}, Name: {device_name}
+                                    </div>
+                                </li>"""
+            else:
+                html += "<li>No devices registered.</li>"
+            html += "</ul>"
+
+            html += "<h2>Services</h2><ul>"
+            service_list_items = self.catalog_data.get("Services", [])
+            if service_list_items:
+                for service in service_list_items:
+                    service_id = service.get("ServiceID", "N/A")
+                    service_name = service.get("Name", f"DefaultNameForID_{service_id}")
+                    available_status = service.get("Available", False)
+
+                    status_color = "green" if available_status else "red"
+                    html += f"""<li>
+                                    <span class='status-circle {status_color}'></span>
+                                    <div class='details'>
+                                        ID: {service_id}, Name: {service_name}
+                                    </div>
+                                </li>"""
+            else:
+                html += "<li>No services registered.</li>"
+            html += "</ul>"
+
+            html += """
+            </body>
+            </html>
+            """
+            return html
         else:
             raise cherrypy.HTTPError(404, "Resource not found")
 
@@ -637,7 +714,9 @@ class Catalog:
             self.save_catalog()
             return json.dumps({"status": "success", "message": "Device added"})
         elif uri[0] == "services":
-            self.catalog_data["serviceList"].append(json_body)
+            self.catalog_data.setdefault("Services", []).append(
+                json_body
+            )  # Modificato da serviceList a Services
             self.save_catalog()
             return json.dumps({"status": "success", "message": "Service added"})
         elif uri[0] == "heartbeat":
@@ -660,17 +739,22 @@ class Catalog:
                 device["LastAvailable"] = time.time()
                 device["Available"] = True
             elif category == "service":
-                service_id = json_body["serviceID"]
+                service_id = json_body.get("serviceID")
                 service = next(
                     (
                         s
-                        for s in self.catalog_data["Services"]
-                        if s["ServiceID"] == service_id
+                        for s in self.catalog_data.get(
+                            "Services", []  # Modificato da serviceList a Services
+                        )
+                        if s.get("ServiceID") == service_id
                     ),
                     None,
                 )
                 if not service:
-                    raise cherrypy.HTTPError(404, "Service not found")
+                    raise cherrypy.HTTPError(
+                        404,
+                        f"Service with ID {service_id} not found in Services",  # Messaggio aggiornato
+                    )
                 service["LastAvailable"] = time.time()
                 service["Available"] = True
             else:
@@ -700,15 +784,51 @@ class Catalog:
             json_body = json.loads(body)
 
         if uri[0] == "devices":
-            for i, device in enumerate(self.catalog_data["deviceList"]):
-                if device["deviceID"] == json_body["deviceID"]:
-                    self.catalog_data["deviceList"][i] = json_body
+            # Modificato per usare "Devices" invece di "deviceList"
+            device_id_to_update = json_body.get("DeviceID")
+            if device_id_to_update is None:
+                raise cherrypy.HTTPError(
+                    400, "DeviceID is required in request body for update"
+                )
+
+            devices = self.catalog_data.get("Devices", [])
+            found = False
+            for i, device in enumerate(devices):
+                if device.get("DeviceID") == device_id_to_update:
+                    self.catalog_data["Devices"][i] = json_body
+                    found = True
                     break
+            if not found:
+                # Opzionale: gestire il caso in cui il dispositivo non viene trovato
+                # Potrebbe essere un errore 404 o si potrebbe aggiungere il dispositivo
+                raise cherrypy.HTTPError(
+                    404, f"Device with ID {device_id_to_update} not found"
+                )
+
         elif uri[0] == "services":
-            for i, service in enumerate(self.catalog_data["serviceList"]):
-                if service["serviceID"] == json_body["serviceID"]:
-                    self.catalog_data["serviceList"][i] = json_body
+            service_id_to_update = json_body.get(
+                "serviceID"
+            )  # Assumendo che il JSON in input usi "serviceID"
+            if service_id_to_update is None:
+                raise cherrypy.HTTPError(
+                    400, "serviceID is required in request body for update"
+                )
+
+            services = self.catalog_data.get(
+                "Services", []
+            )  # Modificato da serviceList a Services
+            found = False
+            for i, service in enumerate(services):
+                if service.get("ServiceID") == service_id_to_update:
+                    self.catalog_data["Services"][
+                        i
+                    ] = json_body  # Modificato da serviceList a Services
+                    found = True
                     break
+            if not found:
+                raise cherrypy.HTTPError(
+                    404, f"Service with ID {service_id_to_update} not found"
+                )
         elif uri[0] == "users":
             if len(uri) < 2:
                 raise cherrypy.HTTPError(400, "UserID is required")
@@ -853,16 +973,21 @@ class Catalog:
                 {"status": "error", "message": f"User {uri[1]} not found"}
             )
         elif uri[0] == "devices" and len(uri) > 1:
-            device_id = uri[1]
-            self.catalog_data["deviceList"] = [
-                d for d in self.catalog_data["deviceList"] if d["deviceID"] != device_id
+            device_id_to_delete = uri[1]
+            # Modificato per usare "Devices" invece di "deviceList"
+            self.catalog_data["Devices"] = [
+                d
+                for d in self.catalog_data.get("Devices", [])
+                if d.get("DeviceID") != device_id_to_delete
             ]
         elif uri[0] == "services" and len(uri) > 1:
-            service_id = uri[1]
-            self.catalog_data["serviceList"] = [
+            service_id_to_delete = uri[1]
+            self.catalog_data["Services"] = [  # Modificato da serviceList a Services
                 s
-                for s in self.catalog_data["serviceList"]
-                if s["serviceID"] != service_id
+                for s in self.catalog_data.get(
+                    "Services", []
+                )  # Modificato da serviceList a Services
+                if s.get("ServiceID") != service_id_to_delete
             ]
         else:
             raise cherrypy.HTTPError(400, "Bad request")
@@ -873,13 +998,25 @@ class Catalog:
     def check_availability(self):
         while True:
             now = time.time()
-            # Check availability of devices and services
-            # We give 3 minutes of tolerance
-            for device in self.catalog_data["Devices"]:
-                if now - device["LastAvailable"] > 180:
+            # Check availability of devices
+            for device in self.catalog_data.get("Devices", []):
+                if "LastAvailable" in device and (
+                    now - device.get("LastAvailable", now) > 180
+                ):  # Aggiunto .get con default
                     device["Available"] = False
-            for service in self.catalog_data["Services"]:
-                if now - service["LastAvailable"] > 180:
+                elif "LastAvailable" not in device:
+                    device["Available"] = False
+
+            # Check availability of services
+            for service in self.catalog_data.get(
+                "Services", []
+            ):  # Modificato da serviceList a Services
+                if "LastAvailable" in service and (
+                    now - service.get("LastAvailable", now)
+                    > 180  # Aggiunto .get con default
+                ):
+                    service["Available"] = False
+                elif "LastAvailable" not in service:
                     service["Available"] = False
             self.save_catalog()
             time.sleep(10)

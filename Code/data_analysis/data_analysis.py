@@ -167,7 +167,6 @@ class DataAnalysis:
                 "MaxIdealHumidity": dog_info.get("MaxIdealHumidity", 80),
             }
 
-        print(self.averages)
         readings = {
             item.get("n", "temp_humid"): item.get("v", False)
             for item in data.get("e", [])
