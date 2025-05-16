@@ -26,6 +26,10 @@ class DataAnalysis:
         # Dictionary to track the last alert sent for each kennel and alert type
         self.last_alerts = {}
         self.averages = {}
+        # Dictionary to track HVAC status for each kennel
+        self.hvac_status = (
+            {}
+        )  # Format: {kennelX: {"heating": bool, "cooling": bool, "humidifier": bool, "dehumidifier": bool}}
 
     def get_data(self):
         self.get_breeds()
@@ -117,6 +121,9 @@ class DataAnalysis:
             print("No dog found for dog id", dog_id)
             return
 
+        # Get dog's name for personalized messages
+        dog_name = dog_info.get("Name", "Your dog")
+
         # If the message comes from the motion sensor
         if sensor_type == "motion":
             readings = {
@@ -127,14 +134,14 @@ class DataAnalysis:
             if motion and self.should_send_alert(kennel_id, "motion"):
                 self.publish(
                     self.baseTopic + f"/kennel{kennel_id}/alert/motion",
-                    "Dog is agitated",
+                    f"{dog_name} is agitated",
                     0,
                 )
                 for token in reservation["firebaseTokens"]:
                     message = messaging.Message(
                         notification=messaging.Notification(
-                            title="Dog is agitated",
-                            body="Your dog is moving too much. Check if everything is ok.",
+                            title=f"{dog_name} is agitated",
+                            body=f"{dog_name} is moving too much. Check if everything is ok.",
                         ),
                         token=token,
                     )
@@ -177,21 +184,97 @@ class DataAnalysis:
             print("Incomplete sensor data:", data)
             return
 
+        # Initialize HVAC status for this kennel if not already present
+        kennel_key = f"kennel{kennel_id}"
+        if kennel_key not in self.hvac_status:
+            self.hvac_status[kennel_key] = {
+                "heating": False,
+                "cooling": False,
+                "humidifier": False,
+                "dehumidifier": False,
+            }
+
         # Humidity check
+        if humidity > breed_info["MaxIdealHumidity"]:
+            # Activate dehumidifier if not already active
+            if not self.hvac_status[kennel_key]["dehumidifier"]:
+                self.hvac_status[kennel_key]["dehumidifier"] = True
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/dehumidifier",
+                    json.dumps({"command": "activate"}),
+                    0,
+                )
+                print(f"Activated dehumidifier for kennel {kennel_id}")
+
+            # Turn off humidifier if active
+            if self.hvac_status[kennel_key]["humidifier"]:
+                self.hvac_status[kennel_key]["humidifier"] = False
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/humidifier",
+                    json.dumps({"command": "deactivate"}),
+                    0,
+                )
+                print(f"Deactivated humidifier for kennel {kennel_id}")
+
+        elif humidity < breed_info["MinIdealHumidity"]:
+            # Activate humidifier if not already active
+            if not self.hvac_status[kennel_key]["humidifier"]:
+                self.hvac_status[kennel_key]["humidifier"] = True
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/humidifier",
+                    json.dumps({"command": "activate"}),
+                    0,
+                )
+                print(f"Activated humidifier for kennel {kennel_id}")
+
+            # Turn off dehumidifier if active
+            if self.hvac_status[kennel_key]["dehumidifier"]:
+                self.hvac_status[kennel_key]["dehumidifier"] = False
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/dehumidifier",
+                    json.dumps({"command": "deactivate"}),
+                    0,
+                )
+                print(f"Deactivated dehumidifier for kennel {kennel_id}")
+
+        else:
+            # Turn off both humidifier and dehumidifier if values are in range
+            if self.hvac_status[kennel_key]["humidifier"]:
+                self.hvac_status[kennel_key]["humidifier"] = False
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/humidifier",
+                    json.dumps({"command": "deactivate"}),
+                    0,
+                )
+                print(
+                    f"Deactivated humidifier for kennel {kennel_id} - humidity in range"
+                )
+
+            if self.hvac_status[kennel_key]["dehumidifier"]:
+                self.hvac_status[kennel_key]["dehumidifier"] = False
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/dehumidifier",
+                    json.dumps({"command": "deactivate"}),
+                    0,
+                )
+                print(
+                    f"Deactivated dehumidifier for kennel {kennel_id} - humidity in range"
+                )
+
         if (
             humidity > breed_info["MaxIdealHumidity"]
             or humidity < breed_info["MinIdealHumidity"]
         ) and self.should_send_alert(kennel_id, "humidity"):
             self.publish(
                 self.baseTopic + f"/kennel{kennel_id}/alert/humidity",
-                f"Humidity {humidity} is outside ideal range ({breed_info['MinIdealHumidity']}%-{breed_info['MaxIdealHumidity']}%)",
+                f"Humidity {humidity} is outside ideal range for {dog_name} ({breed_info['MinIdealHumidity']}%-{breed_info['MaxIdealHumidity']}%)",
                 0,
             )
             for token in reservation["firebaseTokens"]:
                 message = messaging.Message(
                     notification=messaging.Notification(
-                        title="Humidity not ideal",
-                        body=f"Humidity {humidity} is outside ideal range ({breed_info['MinIdealHumidity']}%-{breed_info['MaxIdealHumidity']}%)",
+                        title=f"Humidity not ideal for {dog_name}",
+                        body=f"Humidity {humidity} is outside ideal range for {dog_name} ({breed_info['MinIdealHumidity']}%-{breed_info['MaxIdealHumidity']}%)",
                     ),
                     token=token,
                 )
@@ -226,20 +309,88 @@ class DataAnalysis:
             self.averages[parts[1]].pop(0)
         avg = sum(self.averages[parts[1]]) / 30
         print(avg)
+
+        # Control HVAC based on average temperature
+        if avg > breed_info["MaxIdealTemperature"]:
+            # Activate cooling if not already active
+            if not self.hvac_status[kennel_key]["cooling"]:
+                self.hvac_status[kennel_key]["cooling"] = True
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/cooling",
+                    json.dumps({"command": "activate"}),
+                    0,
+                )
+                print(f"Activated cooling for kennel {kennel_id}")
+
+            # Turn off heating if active
+            if self.hvac_status[kennel_key]["heating"]:
+                self.hvac_status[kennel_key]["heating"] = False
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/heating",
+                    json.dumps({"command": "deactivate"}),
+                    0,
+                )
+                print(f"Deactivated heating for kennel {kennel_id}")
+
+        elif avg < breed_info["MinIdealTemperature"]:
+            # Activate heating if not already active
+            if not self.hvac_status[kennel_key]["heating"]:
+                self.hvac_status[kennel_key]["heating"] = True
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/heating",
+                    json.dumps({"command": "activate"}),
+                    0,
+                )
+                print(f"Activated heating for kennel {kennel_id}")
+
+            # Turn off cooling if active
+            if self.hvac_status[kennel_key]["cooling"]:
+                self.hvac_status[kennel_key]["cooling"] = False
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/cooling",
+                    json.dumps({"command": "deactivate"}),
+                    0,
+                )
+                print(f"Deactivated cooling for kennel {kennel_id}")
+
+        else:
+            # Turn off both heating and cooling if values are in range
+            if self.hvac_status[kennel_key]["heating"]:
+                self.hvac_status[kennel_key]["heating"] = False
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/heating",
+                    json.dumps({"command": "deactivate"}),
+                    0,
+                )
+                print(
+                    f"Deactivated heating for kennel {kennel_id} - temperature in range"
+                )
+
+            if self.hvac_status[kennel_key]["cooling"]:
+                self.hvac_status[kennel_key]["cooling"] = False
+                self.publish(
+                    self.baseTopic + f"/kennel{kennel_id}/hvac/cooling",
+                    json.dumps({"command": "deactivate"}),
+                    0,
+                )
+                print(
+                    f"Deactivated cooling for kennel {kennel_id} - temperature in range"
+                )
+
         if (
             avg > breed_info["MaxIdealTemperature"]
             or avg < breed_info["MinIdealTemperature"]
         ) and self.should_send_alert(kennel_id, "temperature"):
             self.publish(
                 self.baseTopic + f"/kennel{kennel_id}/alert/temperature",
-                f"Temperature {temperature} is outside ideal range ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
+                f"Temperature {temperature} is outside ideal range for {dog_name} ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
                 0,
             )
             for token in reservation["firebaseTokens"]:
                 message = messaging.Message(
                     notification=messaging.Notification(
-                        title="Temperature not ideal",
-                        body=f"Temperature {temperature} is outside ideal range ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
+                        title=f"Temperature not ideal for {dog_name}",
+                        body=f"Temperature {temperature} is outside ideal range for {dog_name} ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
                     ),
                     token=token,
                 )
