@@ -290,25 +290,48 @@ class DataAnalysis:
         if not parts[1] in self.averages.keys():
             self.averages[parts[1]] = []
 
-        # HI = -8.784695 + 1.61139411 × T + 2.338549 × RH - 0.14611605 × T × RH - 0.012308094 × T² - 0.016424828 × RH² + 0.002211732 × T² × RH + 0.00072546 × T × RH² - 0.000003582 × T² × RH²
-        apparent_temp = (
-            -8.784695
-            + 1.61139411 * temperature
-            + 2.338549 * humidity
-            - 0.14611605 * temperature * humidity
-            - 0.012308094 * temperature**2
-            - 0.016424828 * humidity**2
-            + 0.002211732 * temperature**2 * humidity
-            + 0.00072546 * temperature * humidity**2
-            - 0.000003582 * temperature**2 * humidity
-        )  # Apparent temperature in Celsius (from the Internet)
+        # Calculate heat index (apparent temperature) https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
+        # Convert temperature to Fahrenheit for the standard formula
+        temp_f = (temperature * 9 / 5) + 32
+        rh = humidity  # relative humidity in percentage
+
+        # First calculate the simpler formula
+        simple_hi = 0.5 * (temp_f + 61.0 + ((temp_f - 68.0) * 1.2) + (rh * 0.094))
+
+        # Average with the temperature
+        hi_f = (simple_hi + temp_f) / 2
+
+        # If HI >= 80°F, use the full regression equation
+        if hi_f >= 80:
+            # Full Rothfusz regression equation
+            hi_f = -42.379 + 2.04901523 * temp_f + 10.14333127 * rh
+            hi_f -= 0.22475541 * temp_f * rh
+            hi_f -= 0.00683783 * temp_f**2
+            hi_f -= 0.05481717 * rh**2
+            hi_f += 0.00122874 * temp_f**2 * rh
+            hi_f += 0.00085282 * temp_f * rh**2
+            hi_f -= 0.00000199 * temp_f**2 * rh**2
+
+            # Apply adjustments if needed
+            # Adjustment for low humidity
+            if rh < 13 and temp_f >= 80 and temp_f <= 112:
+                adjustment = ((13 - rh) / 4) * ((17 - abs(temp_f - 95)) / 17) ** 0.5
+                hi_f -= adjustment
+
+            # Adjustment for high humidity
+            if rh > 85 and temp_f >= 80 and temp_f <= 87:
+                adjustment = ((rh - 85) / 10) * ((87 - temp_f) / 5)
+                hi_f += adjustment
+
+        # Convert back to Celsius
+        apparent_temp = (hi_f - 32) * 5 / 9
+
         self.averages[parts[1]].append(apparent_temp)
         if len(self.averages[parts[1]]) < 30:
             return  # Not enough data to calculate the average over 30 seconds
         if len(self.averages[parts[1]]) > 30:
             self.averages[parts[1]].pop(0)
         avg = sum(self.averages[parts[1]]) / 30
-        print(avg)
 
         # Control HVAC based on average temperature
         if avg > breed_info["MaxIdealTemperature"]:
@@ -383,14 +406,14 @@ class DataAnalysis:
         ) and self.should_send_alert(kennel_id, "temperature"):
             self.publish(
                 self.baseTopic + f"/kennel{kennel_id}/alert/temperature",
-                f"Temperature {temperature} is outside ideal range for {dog_name} ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
+                f"Apparent Temperature {avg:.1f} is outside ideal range for {dog_name} ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
                 0,
             )
             for token in reservation["firebaseTokens"]:
                 message = messaging.Message(
                     notification=messaging.Notification(
-                        title=f"Temperature not ideal for {dog_name}",
-                        body=f"Temperature {temperature} is outside ideal range for {dog_name} ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
+                        title=f"Apparent Temperature not ideal for {dog_name}",
+                        body=f"Apparent Temperature {avg:.1f} is outside ideal range for {dog_name} ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
                     ),
                     token=token,
                 )
