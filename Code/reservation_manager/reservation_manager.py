@@ -36,15 +36,6 @@ class ReservationManager:
         try:
             with open(self.reservation_file) as f:
                 self.reservations = json.load(f)
-            for reservation in self.reservations["reservation"]:
-                if reservation["active"]:
-                    self.occupy_kennel(
-                        reservation["storeID"], reservation["kennelID"]
-                    )  # set reserved kennels as occupied
-                else:
-                    self.book_kennel(
-                        reservation["storeID"], reservation["kennelID"]
-                    )  # set reserved kennels as locked
         except FileNotFoundError:
             self.reservations = {"reservation": []}
 
@@ -56,6 +47,15 @@ class ReservationManager:
                 self.publish(
                     self.baseTopic + "/kennel1/leds/greenled", message, 2
                 )  # SHOULD BE f"kennel{kennel["ID"]}/leds/greenled" but we have just one led
+        for reservation in self.reservations["reservation"]:
+            if reservation["active"]:
+                self.occupy_kennel(
+                    reservation["storeID"], reservation["kennelID"]
+                )  # set reserved kennels as occupied
+            else:
+                self.book_kennel(
+                    reservation["storeID"], reservation["kennelID"]
+                )  # set reserved kennels as locked
         time.sleep(1)
 
     def subscribe(self, topic, QoS):
