@@ -389,11 +389,6 @@ class Catalog:
                 del dog["MaxIdealTemperature"]
                 del dog["MinIdealHumidity"]
                 del dog["MaxIdealHumidity"]
-        else:
-            dog["MinIdealTemperature"] = body["minIdealTemperature"]
-            dog["MaxIdealTemperature"] = body["maxIdealTemperature"]
-            dog["MinIdealHumidity"] = body["minIdealHumidity"]
-            dog["MaxIdealHumidity"] = body["maxIdealHumidity"]
 
         dog["BreedID"] = body["breedID"]
 
