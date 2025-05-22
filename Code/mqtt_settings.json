@@ -1,5 +1,5 @@
 {
-    "broker": "mqtt.eclipseprojects.io",
+    "broker": "mosquitto",
     "port": 1883,
     "baseTopic": "IoTail"
 }
