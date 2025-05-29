@@ -15,38 +15,42 @@ class DataAnalysis:
         self.broker = broker
         self.port = port
         self.baseTopic = baseTopic
-        self.client = PublisherSubscriber(clientID, broker, port, self)
-        self.settings = json.load(open("settings.json"))
-        self.catalog_url = self.settings["catalog_url"]
+        self.client = PublisherSubscriber(
+            clientID, broker, port, self
+        )  # Initialize the MQTT client
+        self.settings = json.load(open("settings.json"))  # Load settings from JSON file
+        self.catalog_url = self.settings["catalog_url"]  # Catalog URL from settings
         if not firebase_admin._apps:  # Ensures Firebase is initialized only once
             cred = credentials.Certificate("firebase_account_key.json")
-            firebase_admin.initialize_app(cred)
+            firebase_admin.initialize_app(cred)  # Initialize Firebase Admin SDK
         time.sleep(10)  # WAITING FOR RESERVATION_MANAGER TO START
 
-        # Dictionary to track the last alert sent for each kennel and alert type
-        self.last_alerts = {}
-        self.averages = {}
-        # Dictionary to track HVAC status for each kennel
+        self.last_alerts = (
+            {}
+        )  # Dictionary to track the last alert sent for each kennel and alert type
+        self.averages = {}  # Dictionary to track HVAC status for each kennel
         self.hvac_status = (
             {}
-        )  # Format: {kennelX: {"heating": bool, "cooling": bool, "humidifier": bool, "dehumidifier": bool}}
+        )  # Dictionary to track HVAC status. Format: {kennelX: {"heating": bool, "cooling": bool, "humidifier": bool, "dehumidifier": bool}}
 
     def get_data(self):
+        """Fetches data from the catalog and reservation manager services to get breeds, dogs, and reservations."""
         self.get_breeds()
         self.get_dogs()
         self.get_reservations()
 
     def get_breeds(self):
+        """Fetches the list of breeds from the catalog service."""
         headers = {
             "Authorization": f"Bearer data_analysis",
             "Content-Type": "application/json",
         }
         response = requests.get(
             self.settings["catalog_url"] + "/breeds", headers=headers
-        )
-        if response.status_code != 200:
+        )  # Make a GET request to the catalog service to fetch breeds
+        if response.status_code != 200:  # Check if the request was not successful
             raise Exception("Failed to get breeds")
-        self.breeds = response.json()
+        self.breeds = response.json()  # Store the list of breeds
 
     def get_dogs(self):
         headers = {
@@ -55,12 +59,12 @@ class DataAnalysis:
         }
         response = requests.get(
             self.settings["catalog_url"] + "/users", headers=headers
-        )
-        if response.status_code != 200:
+        )  # Make a GET request to the catalog service to fetch users and their dogs
+        if response.status_code != 200:  # Check if the request was not successful
             raise Exception("Failed to get dogs")
         self.dogs = [
             dog for user in response.json() for dog in user["Dogs"] if user["Dogs"]
-        ]
+        ]  # Flatten the list of dogs from all users
 
     def get_reservations(self):
         headers = {
@@ -69,36 +73,39 @@ class DataAnalysis:
         }
         response = requests.get(
             "http://reservation_manager:8083/status", headers=headers
-        )
-        if response.status_code != 200:
+        )  # Make a GET request to the reservation manager service to fetch reservations
+        if response.status_code != 200:  # Check if the request was not successful
             raise Exception("Failed to get reservations")
-        self.reservations = response.json()
+        self.reservations = response.json()  # Store the list of reservations
 
     def start(self):
-        self.client.start()
+        """Starts the MQTT client and subscribes to the necessary topics."""
+        self.client.start()  # Start the MQTT client
         time.sleep(1)
 
     def notify(self, topic, msg):
+        """Callback function to handle incoming MQTT messages."""
         data = json.loads(msg)
         # Pass topic and data to get the kennel ID, sensor type and dog info
-        self.analyze_data(topic, data)
+        self.analyze_data(topic, data)  # Analyze the data received from the MQTT topic
 
     def subscribe(self, topic, QoS):
+        """Subscribes to a specific MQTT topic."""
         self.client.subscribe(topic, QoS)
 
     def should_send_alert(self, kennel_id, alert_type):
-        # Check if enough time has passed since the last alert.
+        """Checks if an alert should be sent based on the last alert time."""
         now = time.time()
         key = (kennel_id, alert_type)
         last_sent = self.last_alerts.get(key, 0)
         if now - last_sent >= 300:  # 5 minutes = 300 seconds
-            self.last_alerts[key] = now
+            self.last_alerts[key] = now  # Update the last sent time
             return True
         return False
 
     def analyze_data(self, topic, data):
-        # Extract the kennel ID and sensor type from the topic
-        try:
+        """Analyzes the data received from the MQTT topic and controls HVAC systems accordingly."""
+        try:  # Extract the kennel ID and sensor type from the topic
             parts = topic.split("/")
             kennel_id = int(parts[1].replace("kennel", ""))
             sensor_type = parts[-1].lower()  # e.g., "temp_humid" or "motion"
@@ -106,18 +113,19 @@ class DataAnalysis:
             print("Error in topic analysis:", topic)
             return
 
-        # Retrieve the reservation associated with the kennel
         reservation = next(
             (r for r in self.reservations if int(r["kennelID"]) == kennel_id), None
-        )
-        if not reservation or not reservation["active"]:
+        )  # Find the reservation for the given kennel ID
+        if (
+            not reservation or not reservation["active"]
+        ):  # Check if the reservation is not present or not active
             return
 
         dog_id = reservation["dogID"]
         dog_info = next(
             (dog for dog in self.dogs if str(dog["DogID"]) == str(dog_id)), None
-        )
-        if not dog_info:
+        )  # Find the dog information for the given dog ID
+        if not dog_info:  # If no dog information is found, log an error and return
             print("No dog found for dog id", dog_id)
             return
 
@@ -129,24 +137,30 @@ class DataAnalysis:
             readings = {
                 item.get("n", "motion"): item.get("v", False)
                 for item in data.get("e", [])
-            }
+            }  # Extract motion readings from the data
             motion = readings.get("motion", False)
-            if motion and self.should_send_alert(kennel_id, "motion"):
+            if motion and self.should_send_alert(
+                kennel_id, "motion"
+            ):  # If motion is detected and an alert was not sent recently
                 self.publish(
                     self.baseTopic + f"/kennel{kennel_id}/alert/motion",
                     f"{dog_name} is agitated",
                     0,
-                )
-                for token in reservation["firebaseTokens"]:
+                )  # Publish an alert message to the MQTT topic
+                for token in reservation[
+                    "firebaseTokens"
+                ]:  # Send a notification to all Firebase tokens associated with the reservation
                     message = messaging.Message(
                         notification=messaging.Notification(
                             title=f"{dog_name} is agitated",
                             body=f"{dog_name} is moving too much. Check if everything is ok.",
                         ),
                         token=token,
-                    )
+                    )  # Create a Firebase message with the notification
                     try:
-                        response = messaging.send(message)
+                        response = messaging.send(
+                            message
+                        )  # Send the message via Firebase
                         print(
                             f"Message sent successfully for kennel {kennel_id}: {response}"
                         )
@@ -155,18 +169,20 @@ class DataAnalysis:
             return
         # If the message comes from the temperature/humidity sensor
         breed_id = dog_info.get("BreedID", 0)
-        if breed_id != 0:
+        if breed_id != 0:  # If the dog has a breed ID, fetch the breed information
             breed_info = next(
                 (breed for breed in self.breeds if breed["BreedID"] == breed_id), None
-            )
-            if breed_info is None:
+            )  # Find the breed information for the given breed ID
+            if (
+                breed_info is None
+            ):  # If no breed information is found, use default values
                 breed_info = {
                     "MinIdealTemperature": 15,
                     "MaxIdealTemperature": 30,
                     "MinIdealHumidity": 20,
                     "MaxIdealHumidity": 80,
                 }
-        else:
+        else:  # If the dog has mixed breed, use values from the dog itself
             breed_info = {
                 "MinIdealTemperature": dog_info.get("MinIdealTemperature", 15),
                 "MaxIdealTemperature": dog_info.get("MaxIdealTemperature", 30),
@@ -177,10 +193,12 @@ class DataAnalysis:
         readings = {
             item.get("n", "temp_humid"): item.get("v", False)
             for item in data.get("e", [])
-        }
+        }  # Extract temperature and humidity readings from the data
         temperature = readings.get("temperature")
         humidity = readings.get("humidity")
-        if temperature is None or humidity is None:
+        if (
+            temperature is None or humidity is None
+        ):  # Check if both temperature and humidity readings are present
             print("Incomplete sensor data:", data)
             return
 
@@ -195,7 +213,9 @@ class DataAnalysis:
             }
 
         # Humidity check
-        if humidity > breed_info["MaxIdealHumidity"]:
+        if (
+            humidity > breed_info["MaxIdealHumidity"]
+        ):  # If humidity is above the ideal range
             # Activate dehumidifier if not already active
             if not self.hvac_status[kennel_key]["dehumidifier"]:
                 self.hvac_status[kennel_key]["dehumidifier"] = True
@@ -216,7 +236,9 @@ class DataAnalysis:
                 )
                 print(f"Deactivated humidifier for kennel {kennel_id}")
 
-        elif humidity < breed_info["MinIdealHumidity"]:
+        elif (
+            humidity < breed_info["MinIdealHumidity"]
+        ):  # If humidity is below the ideal range
             # Activate humidifier if not already active
             if not self.hvac_status[kennel_key]["humidifier"]:
                 self.hvac_status[kennel_key]["humidifier"] = True
@@ -264,13 +286,17 @@ class DataAnalysis:
         if (
             humidity > breed_info["MaxIdealHumidity"]
             or humidity < breed_info["MinIdealHumidity"]
-        ) and self.should_send_alert(kennel_id, "humidity"):
+        ) and self.should_send_alert(
+            kennel_id, "humidity"
+        ):  # If humidity is outside the ideal range and an alert was not sent recently
             self.publish(
                 self.baseTopic + f"/kennel{kennel_id}/alert/humidity",
                 f"Humidity {humidity} is outside ideal range for {dog_name} ({breed_info['MinIdealHumidity']}%-{breed_info['MaxIdealHumidity']}%)",
                 0,
             )
-            for token in reservation["firebaseTokens"]:
+            for token in reservation[
+                "firebaseTokens"
+            ]:  # Send a notification to all Firebase tokens associated with the reservation
                 message = messaging.Message(
                     notification=messaging.Notification(
                         title=f"Humidity not ideal for {dog_name}",
@@ -287,7 +313,9 @@ class DataAnalysis:
                     print(f"Error sending message: {e}")
 
         # Temperature check
-        if not parts[1] in self.averages.keys():
+        if (
+            not parts[1] in self.averages.keys()
+        ):  # Initialize averages for this kennel if not already present
             self.averages[parts[1]] = []
 
         # Calculate heat index (apparent temperature) https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
@@ -326,15 +354,23 @@ class DataAnalysis:
         # Convert back to Celsius
         apparent_temp = (hi_f - 32) * 5 / 9
 
-        self.averages[parts[1]].append(apparent_temp)
+        self.averages[parts[1]].append(
+            apparent_temp
+        )  # Append the apparent temperature to the averages list
         if len(self.averages[parts[1]]) < 30:
             return  # Not enough data to calculate the average over 30 seconds
         if len(self.averages[parts[1]]) > 30:
-            self.averages[parts[1]].pop(0)
-        avg = sum(self.averages[parts[1]]) / 30
+            self.averages[parts[1]].pop(
+                0
+            )  # Remove the oldest reading to keep the list size at 30
+        avg = (
+            sum(self.averages[parts[1]]) / 30
+        )  # Calculate the average apparent temperature over the last 30 seconds
 
         # Control HVAC based on average temperature
-        if avg > breed_info["MaxIdealTemperature"]:
+        if (
+            avg > breed_info["MaxIdealTemperature"]
+        ):  # If average temperature is above the ideal range
             # Activate cooling if not already active
             if not self.hvac_status[kennel_key]["cooling"]:
                 self.hvac_status[kennel_key]["cooling"] = True
@@ -355,7 +391,9 @@ class DataAnalysis:
                 )
                 print(f"Deactivated heating for kennel {kennel_id}")
 
-        elif avg < breed_info["MinIdealTemperature"]:
+        elif (
+            avg < breed_info["MinIdealTemperature"]
+        ):  # If average temperature is below the ideal range
             # Activate heating if not already active
             if not self.hvac_status[kennel_key]["heating"]:
                 self.hvac_status[kennel_key]["heating"] = True
@@ -403,13 +441,17 @@ class DataAnalysis:
         if (
             avg > breed_info["MaxIdealTemperature"]
             or avg < breed_info["MinIdealTemperature"]
-        ) and self.should_send_alert(kennel_id, "temperature"):
+        ) and self.should_send_alert(
+            kennel_id, "temperature"
+        ):  # If average temperature is outside the ideal range and an alert was not sent recently
             self.publish(
                 self.baseTopic + f"/kennel{kennel_id}/alert/temperature",
                 f"Apparent Temperature {avg:.1f} is outside ideal range for {dog_name} ({breed_info['MinIdealTemperature']}ºC-{breed_info['MaxIdealTemperature']}ºC)",
                 0,
             )
-            for token in reservation["firebaseTokens"]:
+            for token in reservation[
+                "firebaseTokens"
+            ]:  # Send a notification to all Firebase tokens associated with the reservation
                 message = messaging.Message(
                     notification=messaging.Notification(
                         title=f"Apparent Temperature not ideal for {dog_name}",
@@ -426,19 +468,23 @@ class DataAnalysis:
                     print(f"Error sending message: {e}")
 
     def publish(self, topic, message, QoS):
+        """Publishes a message to a specific MQTT topic."""
         alert = {"timestamp": time.time(), "message": message}
         self.client.publish(topic, alert, QoS)
 
     def stop(self):
+        """Stops the MQTT client and performs any necessary cleanup."""
         self.client.stop()
 
     def refresh(self):
+        """Periodically fetches data and sends heartbeats to the catalog service."""
         while True:
             self.get_data()
             self.heartbeat()
             time.sleep(60)
 
     def heartbeat(self):
+        """Sends a heartbeat signal to the catalog service to indicate that the data_analysis service is running."""
         try:
             headers = {
                 "Content-Type": "application/json",
@@ -449,8 +495,10 @@ class DataAnalysis:
                 "category": "service",
                 "serviceID": self.serviceID,
             }
-            response = requests.post(url, headers=headers, data=json.dumps(payload))
-            if response.status_code == 200:
+            response = requests.post(
+                url, headers=headers, data=json.dumps(payload)
+            )  # Make a POST request to the catalog service to send a heartbeat
+            if response.status_code == 200:  # Check if the request was successful
                 print("Heartbeat sent successfully")
             else:
                 print("Failed to send heartbeat")
@@ -459,22 +507,24 @@ class DataAnalysis:
 
 
 def signal_handler(sig, frame):
-    # Handles Ctrl+C signals to gracefully stop data_analysis process
+    """Handles keyboard interruption to stop the MQTT client gracefully."""
     print("\nStopping MQTT Data Analysis service...")
     analysis.stop()
 
 
 if __name__ == "__main__":
-    settings = json.load(open("mqtt_settings.json"))
+    settings = json.load(open("mqtt_settings.json"))  # Load MQTT settings
     analysis = DataAnalysis(
         "DataAnalysis", settings["broker"], settings["port"], settings["baseTopic"], 2
-    )
+    )  # Instantiate the DataAnalysis class
 
-    refresh_thread = threading.Thread(target=analysis.refresh)
+    refresh_thread = threading.Thread(
+        target=analysis.refresh
+    )  # Create a thread for the refresh function, which fetches data and sends heartbeats
     refresh_thread.daemon = True  # The thread will terminate when the program ends
-    refresh_thread.start()
+    refresh_thread.start()  # Start the refresh thread
 
-    analysis.start()
+    analysis.start()  # Start the MQTT client
     # Subscription to topics for all types of sensors from all kennels
     analysis.subscribe(settings["baseTopic"] + "/+/sensors/+", 0)
     # Waits for keyboard interruption

@@ -12,21 +12,31 @@ class Publisher:
         self.port = port
         self.notifier = notifier
         self._isSubscriber = False
-        self._paho_mqtt = PahoMQTT.Client(clientID, True)
-        self._paho_mqtt.on_connect = self.connectNotification
+        self._paho_mqtt = PahoMQTT.Client(
+            clientID, True
+        )  # Create a new MQTT client instance
+        self._paho_mqtt.on_connect = (
+            self.connectNotification
+        )  # Set the connect notification callback
 
     def connectNotification(self, paho_mqtt, userdata, flags, rc):
+        """Callback for when the client connects to the broker."""
         print(f"Connected to {self.broker} with result code {rc}")
 
     def publish(self, topic, msg, QoS):
-        self._paho_mqtt.publish(topic, json.dumps(msg), QoS)
+        """Publishes a message to a specified topic."""
+        self._paho_mqtt.publish(
+            topic, json.dumps(msg), QoS
+        )  # Publish the message to the specified topic
         print(f"Message published on topic {topic}")
 
     def start(self):
-        self._paho_mqtt.connect(self.broker, self.port)
-        self._paho_mqtt.loop_start()
+        """Starts the MQTT client and connects to the broker."""
+        self._paho_mqtt.connect(self.broker, self.port)  # Connect to the MQTT broker
+        self._paho_mqtt.loop_start()  # Start the MQTT loop to process network traffic and dispatch callbacks
 
     def stop(self):
-        self._paho_mqtt.loop_stop()
-        self._paho_mqtt.disconnect()
+        """Stops the MQTT client and disconnects from the broker."""
+        self._paho_mqtt.loop_stop()  # Stop the MQTT loop to stop processing network traffic and dispatching callbacks
+        self._paho_mqtt.disconnect()  # Disconnect from the MQTT broker
         print(f"Disconnected from {self.broker}")

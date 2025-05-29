@@ -15,20 +15,27 @@ class TempHumidSensor:
 
     def __init__(self, clientID, broker, port, deviceID):
         self.deviceID = deviceID
-        self.temp_humid_sensor = adafruit_dht.DHT11(board.D15, use_pulseio=False)
+        self.temp_humid_sensor = adafruit_dht.DHT11(
+            board.D15, use_pulseio=False
+        )  # Initialize DHT11 sensor on GPIO pin D15
         self.broker = broker
         self.port = port
-        self.client = Publisher(clientID, broker, port, self)
-        self.catalog_url = json.load(open("settings.json"))["catalog_url"]
+        self.client = Publisher(clientID, broker, port, self)  # Initialize MQTT client
+        self.catalog_url = json.load(open("settings.json"))[
+            "catalog_url"
+        ]  # Load catalog URL from settings
 
     def start(self):
+        """Starts the MQTT client and connects to the broker."""
         self.client.start()
         time.sleep(1)
 
     def publish(self, topic, message, QoS):
+        """Publishes a message to a specific MQTT topic."""
         self.client.publish(topic, message, QoS)
 
     def stop(self):
+        """Stops the MQTT client."""
         self.client.stop()
 
     def GET(self):
@@ -52,9 +59,10 @@ class TempHumidSensor:
                     },
                 ],
             }
-        )
+        )  # Returns the current temperature and humidity in JSON format
 
     def heartbeat(self):
+        """Sends a heartbeat signal to the catalog service every 60 seconds."""
         while True:
             try:
                 headers = {
@@ -66,41 +74,51 @@ class TempHumidSensor:
                     "category": "sensor",
                     "deviceID": self.deviceID,
                 }
-                response = requests.post(url, headers=headers, data=json.dumps(payload))
-                if response.status_code == 200:
+                response = requests.post(
+                    url, headers=headers, data=json.dumps(payload)
+                )  # Send heartbeat to catalog service
+                if response.status_code == 200:  # Check if the heartbeat was successful
                     print("Heartbeat sent successfully")
                 else:
                     print("Failed to send heartbeat")
             except requests.exceptions.RequestException as e:
                 print(f"Error sending heartbeat: {e}")
-            time.sleep(60)
+            time.sleep(60)  # Wait for 60 seconds before sending the next heartbeat
 
 
 if __name__ == "__main__":
-    settings = json.load(open("mqtt_settings.json"))
+    settings = json.load(open("mqtt_settings.json"))  # Load MQTT settings
     temp_humid_sensor = TempHumidSensor(
         "TempHumidSensor", settings["broker"], settings["port"], 1
-    )
+    )  # Initialize TempHumidSensor with MQTT settings
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
-    ip = s.getsockname()[0]
+    ip = s.getsockname()[0]  # Get the local IP address
     s.close()
-    temp_humid_sensor.start()
+    temp_humid_sensor.start()  # Start the MQTT client
     conf = {
         "/": {
             "request.dispatch": cherrypy.dispatch.MethodDispatcher(),
             "tools.sessions.on": True,
         }
-    }
-    cherrypy.tree.mount(temp_humid_sensor, "/", conf)
-    cherrypy.config.update({"server.socket_host": ip})
-    cherrypy.config.update({"server.socket_port": 8082})
+    }  # Configuration for CherryPy server
+    cherrypy.tree.mount(
+        temp_humid_sensor, "/", conf
+    )  # Mount the TempHumidSensor to the CherryPy server
+    cherrypy.config.update(
+        {"server.socket_host": ip}
+    )  # Update the server socket host to the local IP address
+    cherrypy.config.update(
+        {"server.socket_port": 8082}
+    )  # Update the server socket port to 8082
 
-    heartbeat_thread = threading.Thread(target=temp_humid_sensor.heartbeat)
+    heartbeat_thread = threading.Thread(
+        target=temp_humid_sensor.heartbeat
+    )  # Heartbeat thread for TempHumidSensor
     heartbeat_thread.daemon = True  # The thread will terminate when the program ends
-    heartbeat_thread.start()
+    heartbeat_thread.start()  # Start the heartbeat thread
 
-    cherrypy.engine.start()
+    cherrypy.engine.start()  # Start the CherryPy server
 
     while True:
         try:
@@ -127,7 +145,7 @@ if __name__ == "__main__":
                     ],
                 },
                 2,
-            )
+            )  # Publish temperature and humidity data
             time.sleep(1.0)
         except RuntimeError as error:
             print(error.args[0])
@@ -135,5 +153,5 @@ if __name__ == "__main__":
             continue
         except KeyboardInterrupt:
             break
-    cherrypy.engine.block()
-    temp_humid_sensor.stop()
+    cherrypy.engine.block()  # Block the CherryPy engine to keep the server running
+    temp_humid_sensor.stop()  # Stop the MQTT client

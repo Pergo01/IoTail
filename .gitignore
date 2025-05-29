@@ -1,6 +1,5 @@
 .DS_STORE
 Code/Libraries/__pycache__/*
-Code/node-red-data/*
 Code/settings.json
 Code/device_connector/__pycache__/*
 Code/device_connector/Libraries/*
@@ -29,6 +28,3 @@ Code/disinfection_system/Libraries
 Code/thingspeak_adaptor/settings.json
 Code/thingspeak_adaptor/mqtt_settings.json
 Code/thingspeak_adaptor/Libraries
-
-
-!Code/node-red-data/node-red-flow.json

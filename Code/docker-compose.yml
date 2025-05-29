@@ -128,22 +128,6 @@ services:
     networks:
       - iotail_network
 
-  node-red:
-    image: nodered/node-red:latest
-    ports:
-      - "1880:1880"
-    volumes:
-      - ./node-red-data:/data
-    environment:
-      - NODE_RED_ENABLE_PROJECTS=true
-    command: >
-      sh -c "npm install node-red-dashboard &&
-             npm install node-red-node-ui-table &&
-             node-red"
-    restart: unless-stopped
-    networks:
-      - iotail_network
-
   mosquitto:
     image: eclipse-mosquitto:latest
     ports:
