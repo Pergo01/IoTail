@@ -124,8 +124,9 @@ class ReservationManager:
             self.settings = (
                 response.json()
             )  # Store the settings in the instance variable
-        print("Couldn't get stores")
-        exit(1)
+        else:
+            print("Couldn't get stores")
+            exit(1)
 
     def verify_token(self, token):
         """Verifies the JWT token."""
