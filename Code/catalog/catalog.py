@@ -471,6 +471,14 @@ class Catalog:
                 del dog["MaxIdealTemperature"]
                 del dog["MinIdealHumidity"]
                 del dog["MaxIdealHumidity"]
+        else:
+            if (
+                body["breedID"] == 0
+            ):  # If the dog now does not belong to a breed, insert ideal temperature and humidity
+                dog["MinIdealTemperature"] = body["minIdealTemperature"]
+                dog["MaxIdealTemperature"] = body["maxIdealTemperature"]
+                dog["MinIdealHumidity"] = body["minIdealHumidity"]
+                dog["MaxIdealHumidity"] = body["maxIdealHumidity"]
 
         dog["BreedID"] = body["breedID"]  # Update the BreedID of the dog
 
