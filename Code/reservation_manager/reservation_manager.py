@@ -156,7 +156,6 @@ class ReservationManager:
         sorted_kennels = sorted(
             store["Kennels"], key=lambda x: dimension_order[x["Size"]]
         )
-        print("Sorted Kennels:", sorted_kennels)
 
         # Find the smallest available kennel that fits the dog
         for kennel in sorted_kennels:
@@ -184,7 +183,6 @@ class ReservationManager:
         kennelID = self.find_available_kennel(
             store, dog_size
         )  # Find an available kennel for the dog size
-        print("KENNELID:", kennelID)
         if kennelID is not None:  # If an available kennel is found
             reservationID = str(
                 uuid.uuid4()
