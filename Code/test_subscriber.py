@@ -36,8 +36,8 @@ class test:
 
 settings = json.load(open("mqtt_settings.json"))  # Load MQTT settings from JSON file
 subscriber = test(
-    "Subscriber", settings["broker"], settings["port"]
-)  # Create an instance of the test class
+    "Subscriber", "192.168.0.243", settings["port"]
+)  # Create an instance of the test class. Use Raspberry Pi or server IP address (localhost if running on local pc).
 subscriber.start()  # Start the subscriber client
 subscriber.subscribe(
     settings["baseTopic"] + "/#", 0

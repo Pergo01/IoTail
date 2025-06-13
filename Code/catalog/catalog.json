@@ -177,32 +177,32 @@
             "Name": "Reservation Manager",
             "Description": "Manages the reservation of kennels.",
             "CommunicationParadigm": ["Rest", "MQTT"],
-            "LastAvailable": 0,
-            "Available": false
+            "LastAvailable": 1749167761.2619238,
+            "Available": true
         },
         {
             "ServiceID": 2,
             "Name": "Data Analysis",
             "Description": "Analyzes data from sensors.",
             "CommunicationParadigm": ["Rest", "MQTT"],
-            "LastAvailable": 0,
-            "Available": false
+            "LastAvailable": 1749167774.8898945,
+            "Available": true
         },
         {
             "ServiceID": 3,
             "Name": "Disinfection System",
             "Description": "Manages the disinfection of kennels.",
             "CommunicationParadigm": ["Rest", "MQTT"],
-            "LastAvailable": 0,
-            "Available": false
+            "LastAvailable": 1749167762.1918924,
+            "Available": true
         },
         {
             "ServiceID": 4,
             "Name": "Thingspeak Adaptor",
             "Description": "Sends data to Thingspeak.",
             "CommunicationParadigm": ["Rest", "MQTT"],
-            "LastAvailable": 0,
-            "Available": false
+            "LastAvailable": 1749167762.944163,
+            "Available": true
         }
     ],
     "Users": [
@@ -212,7 +212,7 @@
             "Email": "claudiosulas@example.com",
             "PhoneNumber": "+1234567890",
             "ProfilePicture": null,
-            "FirebaseTokens": ["jajfaekqkakoeafakpocmajiq03q9r37qyhd"],
+            "FirebaseTokens": [],
             "Dogs": [
                 {
                     "DogID": "oafjfahiuafduj12oieqo0310445",
