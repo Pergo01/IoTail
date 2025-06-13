@@ -5,7 +5,6 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./catalog:/app
       - ./settings.json:/app/settings.json
       - ./catalog/catalog.json:/app/catalog.json
       - ./secret_key.txt:/app/secret_key.txt
@@ -24,7 +23,6 @@ services:
     environment:
       - MQTT_HOST=mosquitto
     volumes:
-      - ./device_connector:/app
       - ./settings.json:/app/settings.json
       - ./Libraries:/app/Libraries
       - ./mqtt_settings.json:/app/mqtt_settings.json
@@ -44,7 +42,6 @@ services:
     environment:
       - MQTT_HOST=mosquitto
     volumes:
-      - ./camera:/app
       - ./settings.json:/app/settings.json
       - ./Libraries:/app/Libraries
       - ./mqtt_settings.json:/app/mqtt_settings.json
@@ -60,7 +57,6 @@ services:
   data_analysis:
     build: ./data_analysis
     volumes:
-      - ./data_analysis:/app
       - ./Libraries:/app/Libraries
       - ./mqtt_settings.json:/app/mqtt_settings.json
       - ./settings.json:/app/settings.json
@@ -82,7 +78,6 @@ services:
     environment:
     - MQTT_HOST=mosquitto
     volumes:
-      - ./reservation_manager:/app
       - ./settings.json:/app/settings.json
       - ./reservation_manager/reservation.json:/app/reservation.json
       - ./secret_key.txt:/app/secret_key.txt
@@ -101,7 +96,6 @@ services:
     environment:
     - MQTT_HOST=mosquitto
     volumes:
-      - ./thingspeak_adaptor:/app
       - ./settings.json:/app/settings.json
       - ./mqtt_settings.json:/app/mqtt_settings.json
       - ./Libraries:/app/Libraries
@@ -117,7 +111,6 @@ services:
     environment:
     - MQTT_HOST=mosquitto
     volumes:
-      - ./disinfection_system:/app
       - ./settings.json:/app/settings.json
       - ./mqtt_settings.json:/app/mqtt_settings.json
       - ./Libraries:/app/Libraries
