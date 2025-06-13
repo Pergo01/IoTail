@@ -54,7 +54,7 @@ After building, only two commands are needed:
 - `docker compose start` to start the containers
 - `docker compose restart` to restart the containers
 
-Additionally, if only specific containers need to be stopped/started/restarted, it is sufficient to put its name after the commands above, separated by a space.
+Additionally, if only specific containers need to be stopped/started/restarted, it is sufficient to put their name after the commands above, separated by a space.
 
 <!--
 

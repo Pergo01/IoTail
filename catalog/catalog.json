@@ -123,18 +123,9 @@
         {
             "DeviceID": 1,
             "Name": "Temperature and Humidity Sensor",
-            "MeasureType": [
-                "Temperature",
-                "Humidity"
-            ],
-            "MeasureUnit": [
-                "C",
-                "%"
-            ],
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "MeasureType": ["Temperature", "Humidity"],
+            "MeasureUnit": ["C", "%"],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "LastAvailable": 0,
             "Available": false
         },
@@ -143,10 +134,7 @@
             "Name": "Motion Sensor",
             "MeasureType": "Motion",
             "MeasureUnit": "Boolean",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "LastAvailable": 0,
             "Available": false
         },
@@ -154,10 +142,7 @@
             "DeviceID": 3,
             "Name": "Red Led",
             "MeasureType": null,
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "LastAvailable": 0,
             "Available": false
         },
@@ -165,10 +150,7 @@
             "DeviceID": 4,
             "Name": "Yellow Led",
             "MeasureType": null,
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "LastAvailable": 0,
             "Available": false
         },
@@ -176,10 +158,7 @@
             "DeviceID": 5,
             "Name": "Green Led",
             "MeasureType": null,
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
+            "CommunicationParadigm": ["Rest", "MQTT"],
             "LastAvailable": 0,
             "Available": false
         },
@@ -197,44 +176,32 @@
             "ServiceID": 1,
             "Name": "Reservation Manager",
             "Description": "Manages the reservation of kennels.",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
-            "LastAvailable": 1749813304.7086012,
+            "CommunicationParadigm": ["Rest", "MQTT"],
+            "LastAvailable": 1749813424.8040798,
             "Available": true
         },
         {
             "ServiceID": 2,
             "Name": "Data Analysis",
             "Description": "Analyzes data from sensors.",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
-            "LastAvailable": 1749813314.756564,
+            "CommunicationParadigm": ["Rest", "MQTT"],
+            "LastAvailable": 1749813434.9148667,
             "Available": true
         },
         {
             "ServiceID": 3,
             "Name": "Disinfection System",
             "Description": "Manages the disinfection of kennels.",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
-            "LastAvailable": 1749813305.5026405,
+            "CommunicationParadigm": ["Rest", "MQTT"],
+            "LastAvailable": 1749813425.5793428,
             "Available": true
         },
         {
             "ServiceID": 4,
             "Name": "Thingspeak Adaptor",
             "Description": "Sends data to Thingspeak.",
-            "CommunicationParadigm": [
-                "Rest",
-                "MQTT"
-            ],
-            "LastAvailable": 1749813305.5680087,
+            "CommunicationParadigm": ["Rest", "MQTT"],
+            "LastAvailable": 1749813425.7159414,
             "Available": true
         }
     ],
@@ -256,9 +223,7 @@
                     "Size": "Large",
                     "Weight": 37,
                     "CoatType": "Medium",
-                    "Allergies": [
-                        "Pollen"
-                    ],
+                    "Allergies": ["Pollen"],
                     "Picture": null
                 }
             ]
@@ -280,9 +245,7 @@
                     "Size": "Large",
                     "Weight": 20.0,
                     "CoatType": "Medium",
-                    "Allergies": [
-                        "Pollen"
-                    ],
+                    "Allergies": ["Pollen"],
                     "DogID": "fa505dab-aa21-42c1-b3b6-0fc6ba18e145",
                     "Picture": null
                 }
@@ -303,10 +266,7 @@
         {
             "StoreID": 0,
             "Name": "Carrefour",
-            "Location": [
-                44.8837,
-                7.3007
-            ],
+            "Location": [44.8837, 7.3007],
             "Kennels": [
                 {
                     "ID": 0,
@@ -334,10 +294,7 @@
         {
             "StoreID": 1,
             "Name": "Carrefour Market",
-            "Location": [
-                44.8776,
-                7.3322
-            ],
+            "Location": [44.8776, 7.3322],
             "Kennels": [
                 {
                     "ID": 3,
@@ -365,10 +322,7 @@
         {
             "StoreID": 2,
             "Name": "Unieuro",
-            "Location": [
-                44.8835,
-                7.3017
-            ],
+            "Location": [44.8835, 7.3017],
             "Kennels": [
                 {
                     "ID": 6,
@@ -396,10 +350,7 @@
         {
             "StoreID": 3,
             "Name": "Expert Chiale",
-            "Location": [
-                44.8855,
-                7.3051
-            ],
+            "Location": [44.8855, 7.3051],
             "Kennels": [
                 {
                     "ID": 9,
@@ -427,10 +378,7 @@
         {
             "StoreID": 4,
             "Name": "Eurospin",
-            "Location": [
-                44.882,
-                7.3165
-            ],
+            "Location": [44.882, 7.3165],
             "Kennels": [
                 {
                     "ID": 12,
@@ -458,10 +406,7 @@
         {
             "StoreID": 5,
             "Name": "Conad",
-            "Location": [
-                44.8864,
-                7.3385
-            ],
+            "Location": [44.8864, 7.3385],
             "Kennels": [
                 {
                     "ID": 15,
@@ -489,10 +434,7 @@
         {
             "StoreID": 6,
             "Name": "Carrefour Express",
-            "Location": [
-                44.8848,
-                7.3352
-            ],
+            "Location": [44.8848, 7.3352],
             "Kennels": [
                 {
                     "ID": 18,
@@ -520,10 +462,7 @@
         {
             "StoreID": 7,
             "Name": "Le Due Valli",
-            "Location": [
-                44.8838,
-                7.3531
-            ],
+            "Location": [44.8838, 7.3531],
             "Kennels": [
                 {
                     "ID": 21,
@@ -551,10 +490,7 @@
         {
             "StoreID": 8,
             "Name": "Lidl",
-            "Location": [
-                44.8888,
-                7.3542
-            ],
+            "Location": [44.8888, 7.3542],
             "Kennels": [
                 {
                     "ID": 24,
