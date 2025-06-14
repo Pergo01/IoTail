@@ -10,7 +10,7 @@ It is meant to be used with a companion app, which can be found in the [IoTail C
 1. Install [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/).
 2. Clone this repository.
 3. Navigate to the project directory.
-4. Go to [Thingspeak](https://thingspeak.mathworks.com/), create an account or log in, create a new channel and note the write and read API keys of the channel from the "API Keys" section.
+4. Go to the [Thingspeak](https://thingspeak.mathworks.com/) website, create an account or log in, create a new channel and note the write and read API keys of the channel from the "API Keys" section.
 4. Create the file `settings.json` with the following structure (do not change catalog url) and put it inside the root directory:
     ```json
     {
