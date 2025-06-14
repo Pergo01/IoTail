@@ -2,14 +2,23 @@ import json
 import requests
 from Libraries import Subscriber
 import time
-import signal
 import threading
+import requests
+import socket
+import cherrypy
+import jwt
+from datetime import datetime
 
 
 class ThingspeakAdaptor:
+    exposed = True
+
     def __init__(self, clientID, broker, port, serviceID):
         with open("settings.json") as f:
             self.settings = json.load(f)  # Load settings from a JSON file
+
+        with open("secret_key.txt") as f:
+            self.secret_key = f.read()  # Read the secret key from a file
 
         self.clientID = clientID
         self.serviceID = serviceID
@@ -27,6 +36,7 @@ class ThingspeakAdaptor:
             "thingspeak_read_api_key"
         ]  # API key for reading from Thingspeak
         self.thingspeak_url = f"https://api.thingspeak.com/update?api_key={self.thingspeak_write_api_key}"  # URL for updating Thingspeak with the write API key
+        self.channelID = self.settings["channel_id"]  # Channel ID for Thingspeak
 
     def start(self):
         """Starts the MQTT client and connects to the broker."""
@@ -84,6 +94,62 @@ class ThingspeakAdaptor:
         """Stops the MQTT client."""
         self.client.stop()
 
+    def fetch_thingspeak_data(self, kennelID, startDate):
+        """Fetches data from Thingspeak for a specific kennelID."""
+        url = f"https://api.thingspeak.com/channels/{self.channelID}/feeds.json"
+        params = {
+            "api_key": self.thingspeak_read_api_key,
+            "start": startDate,  # Start date for fetching data
+        }
+        response = requests.get(
+            url, params=params
+        )  # Makes a GET request to Thingspeak API
+        if response.status_code == 200:
+            data = response.json()  # Parses the JSON response
+            feeds = data["feeds"]
+
+            kennel_measurements = {
+                "temperature": [],
+                "humidity": [],
+            }
+
+            for feed in feeds:
+                if int(feed["field4"]) == kennelID:
+                    if feed["field1"] is not None:
+                        try:
+                            temp = float(feed["field1"])
+                            kennel_measurements["temperature"].append(
+                                {
+                                    "timestamp": datetime.fromisoformat(
+                                        feed["created_at"].replace("Z", "+00:00")
+                                    ).timestamp(),
+                                    "value": temp,
+                                }
+                            )
+                        except (ValueError, TypeError):
+                            print(f"Invalid temperature value: {feed['field1']}")
+
+                    if feed["field2"] is not None:
+                        try:
+                            hum = float(feed["field2"])
+                            kennel_measurements["humidity"].append(
+                                {
+                                    "timestamp": datetime.fromisoformat(
+                                        feed["created_at"].replace("Z", "+00:00")
+                                    ).timestamp(),
+                                    "value": hum,
+                                }
+                            )
+                        except (ValueError, TypeError):
+                            print(f"Invalid humidity value: {feed['field2']}")
+
+            return json.dumps(kennel_measurements)
+        else:
+            print(f"Failed to fetch data: {response.status_code}")
+            raise cherrypy.HTTPError(
+                response.status_code, "Failed to fetch data from Thingspeak"
+            )
+
     def heartbeat(self):
         """Sends a heartbeat signal to the catalog service every 60 seconds."""
         while True:
@@ -108,20 +174,87 @@ class ThingspeakAdaptor:
                 print(f"Error sending heartbeat: {e}")
             time.sleep(60)  # Waits for 60 seconds before sending the next heartbeat
 
+    def verify_token(self, token):
+        """Verify the JWT token and return the decoded data or raise an error."""
+        if token in [
+            "reservation_manager",
+            "data_analysis",
+            "temp_humid_sensor",
+            "motion_sensor",
+            "led_connector",
+            "camera",
+            "thingspeak_adaptor",
+            "disinfection_system",
+        ]:  # Allow specific tokens without verification for simplicity
+            return token
+        try:
+            decoded = jwt.decode(
+                token, self.secret_key, algorithms=["HS256"]
+            )  # Decode the JWT token using the secret key
+            return decoded
+        except (
+            jwt.ExpiredSignatureError
+        ):  # If the token has expired, return an HTTP error
+            raise cherrypy.HTTPError(401, "Token has expired")
+        except jwt.InvalidTokenError:  # If the token is invalid, return an HTTP error
+            raise cherrypy.HTTPError(401, "Invalid token")
 
-def signal_handler(sig, frame):
-    """Handles keyboard interruption to stop the MQTT client gracefully."""
-    print("\nStopping MQTT Thingspeak adaptor service...")
-    adaptor.stop()
+    def GET(self, *uri, **params):
+        """Handles GET requests to the Thingspeak adaptor."""
+        auth_header = cherrypy.request.headers.get(
+            "Authorization"
+        )  # Get the Authorization header from the request
+        if (
+            not auth_header
+        ):  # If the Authorization header is not present, return an HTTP error
+            raise cherrypy.HTTPError(401, "Authorization token required")
+        else:
+            token = auth_header.split(" ")[
+                1
+            ]  # Extract the token from the Authorization header
+            self.verify_token(token)  # Verify the token for the route
+
+        if uri[0] == "measurements":
+            kennelID = int(
+                params.get("kennelID", None)
+            )  # Get the kennelID from the params
+            startDate = params.get("start", None)  # Get the startDate from the params
+            if (
+                kennelID is None or startDate is None
+            ):  # If kennelID or startDate is not provided, return an HTTP error
+                raise cherrypy.HTTPError(400, "kennelID and startDate are required")
+            return self.fetch_thingspeak_data(
+                kennelID, startDate
+            )  # Fetch data from Thingspeak
+        else:  # If the URI does not match any known routes, return an HTTP error
+            raise cherrypy.HTTPError(404, "Not Found")
 
 
 if __name__ == "__main__":
     settings = json.load(open("mqtt_settings.json"))  # Load MQTT settings
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]  # getting the IP address of the container
+    s.close()
     adaptor = ThingspeakAdaptor(
         "ThingspeakAdaptor", settings["broker"], settings["port"], 4
     )  # Initialize the ThingspeakAdaptor with settings
-
-    adaptor.start()  # Starts the MQTT client
+    conf = {
+        "/": {
+            "request.dispatch": cherrypy.dispatch.MethodDispatcher(),
+            "tools.sessions.on": True,
+            "request.show_tracebacks": False,
+        }
+    }  # Configuration for the CherryPy server
+    cherrypy.tree.mount(
+        adaptor, "/", conf
+    )  # Mount the Thingspeak adaptor class to the root
+    cherrypy.config.update(
+        {"server.socket_host": ip}
+    )  # Set the server socket host to the container's IP address
+    cherrypy.config.update(
+        {"server.socket_port": 8084}
+    )  # Set the server socket port to 8084
 
     heartbeat_thread = threading.Thread(
         target=adaptor.heartbeat
@@ -129,12 +262,10 @@ if __name__ == "__main__":
     heartbeat_thread.daemon = True  # The thread will terminate when the program ends
     heartbeat_thread.start()  # Start the heartbeat thread
 
+    cherrypy.engine.start()  # Start the CherryPy server
+    adaptor.start()  # Starts the MQTT client
     adaptor.subscribe(
         settings["baseTopic"] + "/+/sensors/#", 0
     )  # Subscribe to the sensors topic
-
-    # Waits for keyboard interruption
-    signal.signal(signal.SIGINT, signal_handler)
-
-    # Keeps the program running
-    signal.pause()
+    cherrypy.engine.block()  # Block the main thread to keep the server running until KeyboardInterrupt
+    adaptor.stop()  # Stop the MQTT client when the server is stopped

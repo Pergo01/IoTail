@@ -93,12 +93,15 @@ services:
 
   thingspeak_adaptor:
     build: ./thingspeak_adaptor
+    ports:
+      - "8084:8084"
     environment:
     - MQTT_HOST=mosquitto
     volumes:
       - ./settings.json:/app/settings.json
       - ./mqtt_settings.json:/app/mqtt_settings.json
       - ./Libraries:/app/Libraries
+      - ./secret_key.txt:/app/secret_key.txt
     depends_on:
       - catalog
       - mosquitto
