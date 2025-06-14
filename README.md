@@ -10,7 +10,8 @@ It is meant to be used with a companion app, which can be found in the [IoTail C
 1. Install [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/).
 2. Clone this repository.
 3. Navigate to the project directory.
-4. Create the file `settings.json` with the following structure and put it inside the root directory:
+4. Go to [Thingspeak](https://thingspeak.mathworks.com/), create an account or log in, create a new channel and note the write and read API keys of the channel from the "API Keys" section.
+4. Create the file `settings.json` with the following structure (do not change catalog url) and put it inside the root directory:
     ```json
     {
         "catalog_url": "http://catalog:8080",
@@ -49,6 +50,8 @@ All connections are referred to a Raspberry Pi 3 model B
 - Adafruit DHT Temperature and Humidity sensor, plugged to pin 15
 - Dfrobot DSN-FIR800 Motion sensor, plugged to pin 14
 - Green, Yellow, Red LEDs, plugged through a breadboard, respectively, to pin 21, 26 and 16
+
+To check services and devices status (assuming catalog is online), go to *http://your_server_ip:8080/status_page*
 
 ## Usage
 
