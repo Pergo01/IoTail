@@ -63,6 +63,20 @@ After building, only two commands are needed:
 Additionally, if only specific containers need to be stopped/started/restarted, it is sufficient to put their name after the commands above, separated by a space.
 The commands are meant to be run in the terminal inside the root directory of the project.
 
+## Mock users for testing
+
+There are two mock users:
+- John Doe
+    - email: john.doe@gmail.com
+    - password: 123456789
+
+    User with one dog already present
+- Johanna Doe
+    - email: johanna.doe@gmail.com
+    - password: 987654321
+
+    Completely empty user
+
 <!--
 
 ## Contributing
