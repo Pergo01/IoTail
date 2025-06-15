@@ -1,6 +1,6 @@
 {
     "broker": {
-        "ip": "mqtt.eclipseprojects.io",
+        "ip": "mosquitto",
         "port": 1883
     },
     "Breeds": [
@@ -206,28 +206,6 @@
         }
     ],
     "Users": [
-        {
-            "UserID": "1ij41h15b52n31",
-            "Name": "Claudio Sulas",
-            "Email": "claudiosulas@example.com",
-            "PhoneNumber": "+1234567890",
-            "ProfilePicture": null,
-            "FirebaseTokens": [],
-            "Dogs": [
-                {
-                    "DogID": "oafjfahiuafduj12oieqo0310445",
-                    "Name": "Fuffi",
-                    "BreedID": 1,
-                    "Age": 5,
-                    "Sex": 0,
-                    "Size": "Large",
-                    "Weight": 37,
-                    "CoatType": "Medium",
-                    "Allergies": ["Pollen"],
-                    "Picture": null
-                }
-            ]
-        },
         {
             "UserID": "2a894e30-43ad-4576-aa17-3e29c26c5740",
             "Name": "John Doe",
